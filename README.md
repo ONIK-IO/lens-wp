@@ -25,7 +25,7 @@ composer require onik/onik-images
 
 ### Manual
 
-1. Download the plugin source code zip from the latest release. [Latest Release](https://github.com/ONIK-IO/lens-wp/releases/tag/v0.10)
+1. Download the plugin source code zip from the latest release. [Latest Release](https://github.com/ONIK-IO/lens-wp/releases)
 2. Upload the folder to `/wp-content/plugins/onik-lens/`, or add a plugin from a zip file in the WordPress Admin panel.
 3. Activate via **Plugins** in the WordPress admin
 4. Configure under **Settings > ONIK Lens**
