@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ONIK Images Script Block Configuration",
+  "description": "Configuration for blocking scripts based on URL patterns",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "urlPattern": {
+        "type": "string",
+        "description": "Regex pattern to match against script src URLs. Scripts matching this pattern will be blocked.",
+        "pattern": "^[^\\s]+$",
+        "minLength": 1
+      },
+      "urlFilter": {
+        "type": "string",
+        "description": "Optional regex pattern to match against the current page URL path. If provided, script blocking will only occur on pages where the URL path matches this pattern.",
+        "pattern": "^[^\\s]+$"
+      }
+    },
+    "required": ["urlPattern"],
+    "additionalProperties": false
+  },
+  "examples": [
+    [
+      {
+        "urlPattern": "https://googleAnalytics\\.com/.*"
+      }
+    ],
+    [
+      {
+        "urlPattern": "https://googleAnalytics\\.com/.*",
+        "urlFilter": "#/admin/.*#"
+      },
+      {
+        "urlPattern": "https://facebook\\.com/.*",
+        "urlFilter": "#/social/.*#"
+      }
+    ]
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ONIK Images YouTube Settings Schema",
+  "description": "Schema for configuring CSS selector to YouTube optimization parameters mapping",
+  "type": "object",
+  "additionalProperties": {
+    "type": "object",
+    "properties": {
+      "playlabel": {
+        "type": "string",
+        "description": "String for the play button label (default: 'Play: {video_id}')"
+      },
+      "title": {
+        "type": "string",
+        "description": "String for the video title attribute"
+      },
+      "params": {
+        "type": "string",
+        "description": "String for YouTube player parameters (e.g., 'controls=0&start=10&end=30&modestbranding=2&rel=0')"
+      },
+      "js_api": {
+        "type": "boolean",
+        "default": false,
+        "description": "Boolean to enable YouTube IFrame Player API"
+      },
+      "style": {
+        "type": "string",
+        "description": "String containing CSS styles to append to the lite-youtube element's style attribute"
+      }
+    },
+    "additionalProperties": false
+  },
+  "examples": [
+    {
+      "iframe[src*='youtube']": {
+        "playlabel": "Play: My Awesome Video",
+        "title": "My Awesome Video Title",
+        "params": "controls=0&start=10&end=30&modestbranding=2&rel=0",
+        "js_api": true,
+        "style": "max-width: 100%; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"
+      },
+      ".hero iframe": {
+        "playlabel": "Play Hero Video",
+        "title": "Hero Video",
+        "params": "controls=1&autoplay=0&modestbranding=1",
+        "js_api": false,
+        "style": "width: 100%; height: 400px;"
+      },
+      ".product-video iframe": {
+        "playlabel": "Watch Product Demo",
+        "title": "Product Demonstration",
+        "params": "controls=1&rel=0&showinfo=0",
+        "js_api": true,
+        "style": "border-radius: 12px; box-shadow: 0 8px 16px rgba(0,0,0,0.2);"
+      }
+    }
+  ]
+}

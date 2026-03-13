@@ -1,0 +1,130 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ONIK Images Image Settings Schema",
+  "description": "Schema for configuring CSS selector to image processing parameters mapping",
+  "type": "object",
+  "additionalProperties": {
+    "type": "object",
+    "properties": {
+      "widths": {
+        "type": "array",
+        "items": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000
+        },
+        "minItems": 1,
+        "description": "Array of image widths in pixels to generate. Optional - if not provided, the width will be extracted from the image element's width attribute."
+      },
+      "quality": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 100,
+        "default": 80,
+        "description": "Image quality percentage (1-100)"
+      },
+      "loading": {
+        "type": "string",
+        "enum": ["lazy", "eager", ""],
+        "default": "",
+        "description": "Image loading attribute value. 'lazy' for lazy loading, 'eager' for immediate loading, empty string for browser default"
+      },
+      "sizes": {
+        "type": "string",
+        "default": "",
+        "description": "CSS sizes attribute value for responsive images"
+      },
+      "lazyLoadAfter": {
+        "type": "integer",
+        "minimum": 0,
+        "default": 0,
+        "description": "Number of images to process before enabling lazy loading. Only applies when loading is set to 'lazy'"
+      },
+      "fetchpriority": {
+        "type": "string",
+        "enum": ["high", "low", "auto", ""],
+        "default": "",
+        "description": "Image fetchpriority attribute value. 'high' for high priority, 'low' for low priority, 'auto' for browser default, empty string for no attribute"
+      },
+      "decoding": {
+        "type": "string",
+        "enum": ["sync", "async", "auto", ""],
+        "default": "",
+        "description": "Image decoding attribute value. 'sync' for synchronous decoding, 'async' for asynchronous decoding, 'auto' for browser default, empty string for no attribute"
+      },
+      "format": {
+        "type": "string",
+        "enum": ["auto", "jpg", "jpeg", "png", "gif", "avif", "webp", ""],
+        "default": "auto",
+        "description": "Image format to use. 'auto' for automatic format selection, or specific format like 'jpg', 'jpeg', 'png', 'gif', 'avif', 'webp'. Empty string for no format specification."
+      },
+      "srcSwap": {
+        "type": "string",
+        "enum": ["srcSet", "src", "srcAndSrcSet", "InlineStyleUrl"],
+        "default": "srcSet",
+        "description": "Controls which image attributes to swap. 'srcSet' for responsive images with srcset attribute, 'src' for single image with src attribute, 'srcAndSrcSet' for both attributes, 'InlineStyleUrl' for inline CSS background-image URLs"
+      },
+      "setWidth": {
+        "type": ["integer", "null"],
+        "minimum": 1,
+        "description": "Fixed width attribute to add to the image tag. Must be a positive integer or null for no width attribute"
+      },
+      "setHeight": {
+        "type": ["integer", "null"],
+        "minimum": 1,
+        "description": "Fixed height attribute to add to the image tag. Must be a positive integer or null for no height attribute"
+      },
+      "picture": {
+        "type": "boolean",
+        "default": false,
+        "description": "When true, replaces the img tag with a picture element containing source tags for better image rendering control. When false, uses the existing img swapping behavior."
+      }
+    },
+    "required": [],
+    "additionalProperties": false
+  },
+  "examples": [
+    {
+      "img.product-image": {
+        "widths": [300, 600, 900],
+        "quality": 80,
+        "loading": "lazy",
+        "sizes": "(max-width: 768px) 100vw, 50vw",
+        "lazyLoadAfter": 2,
+        "fetchpriority": "high",
+        "decoding": "async",
+        "format": "webp",
+        "srcSwap": "srcSet",
+        "setWidth": 300,
+        "setHeight": 200,
+        "picture": false
+      },
+      ".hero img": {
+        "widths": [400, 800, 1200],
+        "quality": 90,
+        "loading": "eager",
+        "sizes": "100vw",
+        "fetchpriority": "high",
+        "decoding": "sync",
+        "format": "avif",
+        "srcSwap": "srcAndSrcSet",
+        "setWidth": 800
+      },
+      "img": {
+        "widths": [100, 200, 300],
+        "quality": 75,
+        "loading": "lazy",
+        "lazyLoadAfter": 0,
+        "fetchpriority": "auto",
+        "decoding": "auto",
+        "format": "auto",
+        "srcSwap": "src"
+      },
+      "img.auto-width": {
+        "quality": 85,
+        "loading": "lazy",
+        "format": "webp"
+      }
+    }
+  ]
+} 
