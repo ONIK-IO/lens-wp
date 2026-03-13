@@ -25,9 +25,10 @@ composer require onik/onik-images
 
 ### Manual
 
-1. Upload the folder to `/wp-content/plugins/onik-images/`
-2. Activate via **Plugins** in the WordPress admin
-3. Configure under **Settings > ONIK Lens**
+1. Download [onik-images-0.9.zip](https://github.com/ONIK-IO/lens-wp/releases/download/0.9/onik-images-0.9.zip)
+2. Upload the folder to `/wp-content/plugins/onik-images/`
+3. Activate via **Plugins** in the WordPress admin
+4. Configure under **Settings > ONIK Lens**
 
 
 ## Configuration
