@@ -20,7 +20,7 @@ Optimizes images and YouTube embeds via the [ONIK Lens](https://onik.io/lens) CD
 ### Via Composer
 
 ```bash
-composer require onik/onik-images
+composer require onik/onik-lens
 ```
 
 ### Manual
