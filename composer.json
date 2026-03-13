@@ -1,5 +1,5 @@
 {
-    "name": "onik/onik-images",
+    "name": "onik/lens-wp",
     "description": "ONIK Lens WordPress Plugin — optimizes images and YouTube embeds via the ONIK Lens CDN.",
     "type": "wordpress-plugin",
     "license": "GPL-2.0-or-later",
