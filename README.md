@@ -37,7 +37,7 @@ Slow images are the primary reason WordPress sites fail Core Web Vitals like Lar
 If you manage your WordPress installation with Composer (e.g. Bedrock or a custom stack):
 
 ```bash
-composer require onik/lens-wp
+composer require onik/onik-lens
 ```
 
 The plugin will be installed automatically into your plugins directory via `composer/installers`.
