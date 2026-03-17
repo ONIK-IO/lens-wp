@@ -1,18 +1,18 @@
 <?php
 /*
  * Plugin Name:       ONIK Lens
- * Plugin URI:        https://onik.io/images/wordpress-plugin
- * Description:       Configures ONIK Lens to optimize images and videos. See Settings -> ONIK Lens for configuration settings.
- * Version:           0.9
- * Author:            ONIK
- * Author URI:        https://onik.io/lens
+ * Plugin URI:        https://onik.io/wp/lens
+ * Description:       ONIK Lens automatically optimizes images and YouTube videos. See Settings -> ONIK Lens for configuration.  
+ * Version:           0.13.260317b
+ * Author:            ONIK 
+ * Author URI:        https://onik.io/
  * Requires at least: 6.0
  * Tested up to:      6.4
  * Requires PHP:      8.0
 
  */
 
-define('ONIK_IMAGES_VERSION', '0.9');
+define('ONIK_IMAGES_VERSION', '0.13.260317b');
 
 // Require Composer autoloader
 require_once __DIR__ . '/vendor/autoload.php';
