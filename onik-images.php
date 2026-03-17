@@ -12,6 +12,8 @@
 
  */
 
+define('ONIK_IMAGES_VERSION', '0.9');
+
 // Require Composer autoloader
 require_once __DIR__ . '/vendor/autoload.php';
 
@@ -37,16 +39,16 @@ function onik_images_activate($reset = false)
     }
 
     if (get_option('onik_images_site') === false || $reset) {
-        update_option('onik_images_site', 'trial');
+        update_option('onik_images_site', preg_replace('#^https?://#', '', get_site_url()));
     }
     // Set default for image converter URL if not already set
     if (get_option('onik_images_image_converter_url') === false || $reset) {
         update_option('onik_images_image_converter_url', 'https://images.onik.io/');
     }
 
-    // Set default for enabled state if not already set (disabled by default for safety)
+    // Set default for enabled state if not already set
     if (get_option('onik_images_enabled') === false || $reset) {
-        update_option('onik_images_enabled', '0');
+        update_option('onik_images_enabled', '1');
     }
 
     // Set default for debug if not already set
@@ -65,6 +67,27 @@ function onik_images_activate($reset = false)
     if (get_option('onik_images_youtube_settings') === false || $reset) {
         update_option('onik_images_youtube_settings', '{"iframe[src*=\'youtube\']": {},".elementor-widget-video":{}}');
     }
+
+    // Lens activation options
+    if (get_option('onik_lens_activated') === false || $reset) {
+        update_option('onik_lens_activated', '0');
+    }
+    if (get_option('onik_lens_activation_reason') === false || $reset) {
+        update_option('onik_lens_activation_reason', '');
+    }
+    if (get_option('onik_lens_activation_message') === false || $reset) {
+        update_option('onik_lens_activation_message', '');
+    }
+    // Reset to empty so next admin load triggers a re-check
+    if (get_option('onik_lens_activation_next_check') === false || $reset) {
+        update_option('onik_lens_activation_next_check', '');
+    }
+
+    // We should run an activation check
+    $activation = new \OnikImages\LensActivation();
+    $activation->activate();
+    
+    
 
 }
 if (function_exists('register_activation_hook')) {
@@ -87,7 +110,9 @@ add_action('admin_menu', 'onik_images_add_menu_page');
 
 function onik_images_settings_init()
 {
-    register_setting('onik_images_settings', 'onik_images_enabled');
+    register_setting('onik_images_settings', 'onik_images_enabled', [
+        'sanitize_callback' => 'onik_images_sanitize_enabled'
+    ]);
     register_setting('onik_images_settings', 'onik_images_tenant');
     register_setting('onik_images_settings', 'onik_images_site');
     register_setting('onik_images_settings', 'onik_images_allow_domains');
@@ -320,6 +345,45 @@ function onik_images_is_advanced_mode()
 add_action('admin_init', 'onik_images_settings_init');
 
 /**
+ * Handle manual "Check Activation Now" form submission
+ */
+add_action('admin_init', 'onik_images_handle_activation_check');
+
+function onik_images_handle_activation_check()
+{
+    if (!isset($_POST['onik_lens_activate_now'])) {
+        return;
+    }
+    check_admin_referer('onik_lens_activate_action', 'onik_lens_activate_nonce');
+    if (!current_user_can('manage_options')) {
+        return;
+    }
+    (new \OnikImages\LensActivation())->activate();
+    wp_redirect(add_query_arg([
+        'page'                  => 'onik_images_settings',
+        'tab'                   => 'general',
+        'activation-attempted'  => '1',
+    ], admin_url('options-general.php')));
+    exit;
+}
+
+/**
+ * Check lens activation on every admin page load (when due)
+ */
+add_action('admin_init', 'onik_images_check_activation');
+
+function onik_images_check_activation()
+{
+    if (!is_admin() || !current_user_can('manage_options')) {
+        return;
+    }
+    $activation = new \OnikImages\LensActivation();
+    if ($activation->isCheckDue()) {
+        $activation->activate();
+    }
+}
+
+/**
  * Check if the current page contains YouTube videos
  * 
  * @return bool True if YouTube videos are detected, false otherwise
@@ -494,6 +558,32 @@ function onik_images_settings_page()
         settings_errors('onik_images_image_converter_url');
         settings_errors('onik_images_preloads');
         settings_errors('onik_images_script_block');
+
+        // Activation notices
+        $activation = new \OnikImages\LensActivation();
+        $next_check = get_option('onik_lens_activation_next_check', '');
+        $status = $activation->getStatus();
+
+        if (isset($_GET['activation-attempted']) && $_GET['activation-attempted'] === '1') {
+            if ($activation->isActivated()) {
+                echo '<div class="notice notice-success is-dismissible"><p><strong>Activation successful!</strong> Your ONIK Lens account is active.</p></div>';
+            } else {
+                $msg = esc_html($status['message'] ?: $status['reason'] ?: 'Activation failed. Please check your credentials.');
+                echo '<div class="notice notice-error is-dismissible"><p><strong>Activation failed:</strong> ' . $msg . '</p></div>';
+            }
+        } elseif (!$activation->isActivated() && $next_check !== '' && $next_check !== false) {
+            $msg = esc_html($status['message'] ?: $status['reason'] ?: 'Your account could not be verified.');
+            $nonce_field = wp_nonce_field('onik_lens_activate_action', 'onik_lens_activate_nonce', true, false);
+            $action_url  = esc_url(admin_url('options-general.php?page=onik_images_settings'));
+            echo '<div class="notice notice-warning is-dismissible">'
+                . '<p><strong>ONIK Lens is not activated:</strong> ' . $msg . '</p>'
+                . '<form method="post" action="' . $action_url . '" style="margin-bottom:10px;">'
+                . '<input type="hidden" name="onik_lens_activate_now" value="1" />'
+                . $nonce_field
+                . '<p><input type="submit" class="button button-secondary" value="Check Activation Now" /></p>'
+                . '</form>'
+                . '</div>';
+        }
         ?>
 
         <h2 class="nav-tab-wrapper">
@@ -627,6 +717,7 @@ function onik_images_settings_page()
                     onclick="return confirm('Are you sure you want to reset all settings to their default values? This action cannot be undone.');">
             </p>
         </form>
+
 
         <?php if ($current_tab === 'image_settings'): ?>
             <!-- Documentation removed as per user request -->
@@ -835,6 +926,32 @@ function onik_images_settings_page()
     <?php
 }
 
+function onik_images_account_section_callback()
+{
+    echo '<p>Configure your ONIK Lens account credentials.</p>';
+
+    $activation = new \OnikImages\LensActivation();
+    $next_check = get_option('onik_lens_activation_next_check', '');
+    $status = $activation->getStatus();
+
+    echo '<table class="form-table" role="presentation"><tbody><tr>';
+    echo '<th scope="row">Activation Status</th>';
+    echo '<td>';
+
+    if ($next_check === '' || $next_check === false) {
+        echo '<span style="color:#888;">&#8212; Not yet checked</span>';
+    } elseif ($activation->isActivated()) {
+        echo '<span style="color:#46b450;">&#10003; Activated</span>';
+    } else {
+        $msg = esc_html($status['message'] ?: $status['reason']);
+        echo '<span style="color:#dc3232;">&#10007; Not activated' . ($msg ? ': ' . $msg : '') . '</span>';
+    }
+
+    echo '</td></tr></tbody></table>';
+
+  
+}
+
 function onik_images_settings_image_converter_url_callback()
 {
     onik_images_addTextOption('onik_images_image_converter_url');
@@ -847,6 +964,23 @@ function onik_images_settings_enabled_callback()
 {
     onik_images_addCheckboxOption('onik_images_enabled');
     echo '<p style="">When unchecked, the plugin will have no effect on the front end.</p>';
+    if (true) {
+        $debug_rows = [
+            'onik_lens_activated'            => get_option('onik_lens_activated', ''),
+            'onik_lens_activation_reason'    => get_option('onik_lens_activation_reason', ''),
+            'onik_lens_activation_message'   => get_option('onik_lens_activation_message', ''),
+            'onik_lens_activation_next_check' => get_option('onik_lens_activation_next_check', ''),
+        ];
+
+        echo '<table class="form-table" role="presentation"><tbody>';
+        foreach ($debug_rows as $key => $value) {
+            echo '<tr>';
+            echo '<th scope="row">' . esc_html($key) . '</th>';
+            echo '<td>' . esc_html($value !== '' ? $value : '(empty)') . '</td>';
+            echo '</tr>';
+        }
+        echo '</tbody></table>';
+    }
 }
 
 function onik_images_settings_tenant_callback()
@@ -2345,7 +2479,10 @@ function onik_images_register_ob_start()
     if (onik_images_get_current_request_path() && strpos(onik_images_get_current_request_path(), '/wp-json/') !== false) {
         return;
     }
-
+    // if is activated, return
+    if (get_option('onik_lens_activated') !== '1') {
+        return;
+    }
     ob_start('alter_html');
 }
 
@@ -2594,6 +2731,11 @@ function alter_html_hybrid($html, $current_path_override = null)
         return $html;
     }
 
+    $activation = new \OnikImages\LensActivation();
+    if (!$activation->isActivated()) {
+        return $html;
+    }
+
     $tenant = get_option('onik_images_tenant');
     $site = get_option('onik_images_site');
     $appendLocation = $trimmed_url . $tenant . '/' . $site . '/';
@@ -2679,6 +2821,12 @@ function alter_html_hybrid($html, $current_path_override = null)
                 foreach ($elements as $element) {
                     // Skip if this element has already been processed by a previous selector
                     if ($processedElements->contains($element)) {
+                        continue;
+                    }
+
+                    // Skip if this element has the onik-ignore class
+                    $elementClasses = preg_split('/\s+/', trim($element->getAttribute('class')));
+                    if (in_array('onik-ignore', $elementClasses)) {
                         continue;
                     }
 
@@ -4767,6 +4915,16 @@ function onik_images_sanitize_script_block($input)
     return $input;
 }
 
+
+function onik_images_sanitize_enabled($input)
+{
+    $new = ($input === '1' || $input === 1) ? '1' : '0';
+    $old = get_option('onik_images_enabled', '0');
+    if ($new === '1' && $old !== '1') {
+        (new \OnikImages\LensActivation())->scheduleImmediateCheck();
+    }
+    return $new;
+}
 
 function onik_images_sanitize_image_converter_url($input)
 {

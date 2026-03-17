@@ -11,6 +11,7 @@ Slow images are the primary reason WordPress sites fail Core Web Vitals like Lar
 ## Key Features
 - **Instant results** — activate and your images are immediately served in the right format, at the right size (mobile or desktop), and from the edge.
 - **Modern Formats** AVIF, WebP, JPEG — Automatically uses the most efficient format supported by your visitors browsers
+- **Lightweight & fast** — no image processing on your server, no bloated libraries, no background jobs. All the heavy lifting is offloaded to the edge so your server stays fast and lean.
 - **Non-destructive** — your WordPress Media Library is never modified; uninstall by simply deactivating the plugin
 - **Works everywhere** — optimizes images in media, theme assets, Sliders, page builders (Elementor, Divi, Beaver Builder, and more), and any HTML on the page
 - **Full Control of Lazy Load & Sizing** — Configure lazy loading per CSS selector, control how many images load eagerly above the fold, and fine-tune responsive `srcset` breakpoints to match your design — all from the settings panel.
