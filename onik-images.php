@@ -3,7 +3,7 @@
  * Plugin Name:       ONIK Lens
  * Plugin URI:        https://onik.io/wp/lens
  * Description:       ONIK Lens automatically optimizes images and YouTube videos. See Settings -> ONIK Lens for configuration.  
- * Version:           0.13.260317b
+ * Version:           0.13.260318
  * Author:            ONIK 
  * Author URI:        https://onik.io/
  * Requires at least: 6.0
@@ -12,7 +12,7 @@
 
  */
 
-define('ONIK_IMAGES_VERSION', '0.13.260317b');
+define('ONIK_IMAGES_VERSION', '0.13.260318');
 
 // Require Composer autoloader
 require_once __DIR__ . '/vendor/autoload.php';
@@ -83,9 +83,7 @@ function onik_images_activate($reset = false)
         update_option('onik_lens_activation_next_check', '');
     }
 
-    // We should run an activation check
-    $activation = new \OnikImages\LensActivation();
-    $activation->activate();
+    onik_images_check_activation(true);
     
     
 
@@ -569,7 +567,8 @@ function onik_images_settings_page()
                 echo '<div class="notice notice-success is-dismissible"><p><strong>Activation successful!</strong> Your ONIK Lens account is active.</p></div>';
             } else {
                 $msg = esc_html($status['message'] ?: $status['reason'] ?: 'Activation failed. Please check your credentials.');
-                echo '<div class="notice notice-error is-dismissible"><p><strong>Activation failed:</strong> ' . $msg . '</p></div>';
+                $clear_url = esc_url(remove_query_arg('activation-attempted'));
+                echo '<div class="notice notice-error is-dismissible"><p><strong>Activation failed:</strong> ' . $msg . ' <a href="' . $clear_url . '">clear</a></p></div>';
             }
         } elseif (!$activation->isActivated() && $next_check !== '' && $next_check !== false) {
             $msg = esc_html($status['message'] ?: $status['reason'] ?: 'Your account could not be verified.');

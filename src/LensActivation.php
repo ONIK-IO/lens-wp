@@ -8,6 +8,11 @@ class LensActivation
 
     public function activate(): bool
     {
+        // Clear stale options so they are refreshed by this activation check.
+        update_option('onik_lens_activation_reason', '');
+        update_option('onik_lens_activation_message', '');
+        update_option('onik_lens_activation_next_check', '');
+
         $payload = [
             'wpSite'        => get_bloginfo('name'),
             'wpUrl'         => get_site_url(),
@@ -24,7 +29,7 @@ class LensActivation
         ]);
 
         if (is_wp_error($response) || wp_remote_retrieve_response_code($response) !== 200) {
-            $this->storeHttpError();
+            $this->storeHttpError($response);
             return false;
         }
 
@@ -82,11 +87,32 @@ class LensActivation
         update_option('onik_lens_activation_next_check', (new \DateTime('+24 hours'))->format(\DateTime::ATOM));
     }
 
-    private function storeHttpError(): void
+    private function storeHttpError($response): void
     {
         update_option('onik_lens_activated', '0');
         update_option('onik_lens_activation_reason', 'network_error');
-        update_option('onik_lens_activation_message', 'Could not reach the activation server. Please try again later.');
+
+        $message = null;
+        if (!is_wp_error($response)) {
+            $body = json_decode(wp_remote_retrieve_body($response), true);
+            if (isset($body['message']) && $body['message'] !== '') {
+                $message = $body['message'];
+            }
+        }
+
+        if ($message === null) {
+            $message = 'Could not reach the activation server. Please try again later. 1234567890';
+            if (is_wp_error($response)) {
+                $message .= ' (' . $response->get_error_message() . ')';
+            } else {
+                $code = wp_remote_retrieve_response_code($response);
+                if ($code !== null && $code !== false) {
+                    $message .= ' (HTTP ' . $code . ')';
+                }
+            }
+        }
+
+        update_option('onik_lens_activation_message', $message);
         update_option('onik_lens_activation_next_check', (new \DateTime('+1 hour'))->format(\DateTime::ATOM));
     }
 }
