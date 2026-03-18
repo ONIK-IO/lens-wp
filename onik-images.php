@@ -3,7 +3,7 @@
  * Plugin Name:       ONIK Lens
  * Plugin URI:        https://onik.io/wp/lens
  * Description:       ONIK Lens automatically optimizes images and YouTube videos. See Settings -> ONIK Lens for configuration.  
- * Version:           0.13.260318
+ * Version:           0.13.260318b
  * Author:            ONIK 
  * Author URI:        https://onik.io/
  * Requires at least: 6.0
@@ -12,7 +12,7 @@
 
  */
 
-define('ONIK_IMAGES_VERSION', '0.13.260318');
+define('ONIK_IMAGES_VERSION', '0.13.260318b');
 
 // Require Composer autoloader
 require_once __DIR__ . '/vendor/autoload.php';
@@ -199,6 +199,7 @@ function onik_images_settings_init()
         );
     }
 
+    if (onik_images_is_advanced_mode()) {
     add_settings_field(
         'onik_images_tenant',
         'Tenant:',
@@ -215,7 +216,7 @@ function onik_images_settings_init()
         'onik_images_general_section'
     );
 
-    if (onik_images_is_advanced_mode()) {
+    
         add_settings_field(
             'onik_images_allow_domains',
             'Allow Domains',
@@ -962,28 +963,31 @@ function onik_images_settings_image_converter_url_callback()
 function onik_images_settings_enabled_callback()
 {
     onik_images_addCheckboxOption('onik_images_enabled');
-    echo '<p style="">When unchecked, the plugin will have no effect on the front end.</p>';
-    if (true) {
-        $debug_rows = [
-            'onik_lens_activated'            => get_option('onik_lens_activated', ''),
-            'onik_lens_activation_reason'    => get_option('onik_lens_activation_reason', ''),
-            'onik_lens_activation_message'   => get_option('onik_lens_activation_message', ''),
-            'onik_lens_activation_next_check' => get_option('onik_lens_activation_next_check', ''),
-        ];
-
-        echo '<table class="form-table" role="presentation"><tbody>';
-        foreach ($debug_rows as $key => $value) {
-            echo '<tr>';
-            echo '<th scope="row">' . esc_html($key) . '</th>';
-            echo '<td>' . esc_html($value !== '' ? $value : '(empty)') . '</td>';
-            echo '</tr>';
-        }
-        echo '</tbody></table>';
+    echo '<p style="">When unchecked, the plugin will have no effect on the front end</p>';
+    if (onik_images_is_advanced_mode() === false) {
+        return;
     }
+    $debug_rows = [
+        'onik_lens_activated'            => get_option('onik_lens_activated', ''),
+        'onik_lens_activation_reason'    => get_option('onik_lens_activation_reason', ''),
+        'onik_lens_activation_message'   => get_option('onik_lens_activation_message', ''),
+        'onik_lens_activation_next_check' => get_option('onik_lens_activation_next_check', ''),
+    ];
+
+    echo '<table class="form-table" role="presentation"><tbody>';
+    foreach ($debug_rows as $key => $value) {
+        echo '<tr>';
+        echo '<th scope="row">' . esc_html($key) . '</th>';
+        echo '<td>' . esc_html($value !== '' ? $value : '(empty)') . '</td>';
+        echo '</tr>';
+    }
+    echo '</tbody></table>';
+    
 }
 
 function onik_images_settings_tenant_callback()
 {
+    
     onik_images_addTextOption('onik_images_tenant');
 }
 
