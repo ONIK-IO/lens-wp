@@ -53,7 +53,7 @@ No PHP configuration, no `wp-config.php` constants, and no manual file edits are
 
 ## More Information
 
-Full documentation, feature guides, and account setup are available at **[onik.io](https://onik.io/lens)**.
+Full documentation, feature guides, and account setup are available at **[onik.io](https://onik.io/wp/lens)**.
 
 ---
 
