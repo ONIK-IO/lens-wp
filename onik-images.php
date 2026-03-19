@@ -3,7 +3,7 @@
  * Plugin Name:       ONIK Lens
  * Plugin URI:        https://onik.io/wp/lens
  * Description:       ONIK Lens automatically optimizes images and YouTube videos. See Settings -> ONIK Lens for configuration.  
- * Version:           0.13.2603182
+ * Version:           0.13.260319
  * Author:            ONIK 
  * Author URI:        https://onik.io/
  * Requires at least: 6.0
@@ -12,7 +12,7 @@
 
  */
 
-define('ONIK_IMAGES_VERSION', '0.13.2603182');
+define('ONIK_IMAGES_VERSION', '0.13.260319');
 
 // Require Composer autoloader
 require_once __DIR__ . '/vendor/autoload.php';
@@ -2831,6 +2831,15 @@ function alter_html_hybrid($html, $current_path_override = null)
                     $elementClasses = preg_split('/\s+/', trim($element->getAttribute('class')));
                     if (in_array('onik-ignore', $elementClasses)) {
                         continue;
+                    }
+
+                    // Skip if the immediate parent element has the onik-ignore class
+                    $parentNode = $element->parentNode;
+                    if ($parentNode && $parentNode->nodeType === XML_ELEMENT_NODE) {
+                        $parentClasses = preg_split('/\s+/', trim($parentNode->getAttribute('class')));
+                        if (in_array('onik-ignore', $parentClasses)) {
+                            continue;
+                        }
                     }
 
                     if ($element->tagName == 'img') {
