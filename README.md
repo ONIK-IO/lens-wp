@@ -2,7 +2,7 @@
 
 **Boost your Google PageSpeed score and pass Core Web Vitals — without touching a single file in your Media Library.**
 
-ONIK Lens optimizes every image and YouTube embed on your site and serves them through the [ONIK Lens CDN](https://onik.io/lens). Modern formats (AVIF/WebP), tailored sizes (mobile & desktop), and delivery from an edge node closest to the visitor.
+ONIK Lens optimizes every image and YouTube embed on your site and serves them through the [ONIK Lens CDN](https://onik.io/wp/lens). Modern formats (AVIF/WebP), tailored sizes (mobile & desktop), and delivery from an edge node closest to the visitor.
 
 ## Why ONIK Lens?
 
@@ -22,7 +22,7 @@ Slow images are the primary reason WordPress sites fail Core Web Vitals like Lar
 
 - WordPress 6.0+
 - PHP 8.0+
-- An [ONIK Lens](https://onik.io/lens) account (free trial available)
+- An [ONIK Lens](https://onik.io/wp/lens) account ($20 CAD/month, included with ONIK Monitoring, free trial available)
 
 ## Installation
 
