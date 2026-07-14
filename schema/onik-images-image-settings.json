@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "ONIK Images Image Settings Schema",
+  "title": "ONIK Lens Image Settings Schema",
   "description": "Schema for configuring CSS selector to image processing parameters mapping",
   "type": "object",
   "additionalProperties": {

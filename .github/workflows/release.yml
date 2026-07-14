@@ -1,0 +1,92 @@
+# This workflow does NOT run in this repo. build.sh ships it into the public
+# distribution repo (ONIK-IO/lens-wp), where it runs. See public-repo/README.md.
+name: Release
+
+# Fires when a release PR is merged into main. The release is therefore cut from what is
+# actually on main — not from a branch that might never be accepted. build.sh --push only
+# pushes the release branch and opens the PR; it creates no tag and no release.
+on:
+  push:
+    branches: [main]
+
+# Needed to create the tag, the release, and upload its assets.
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # The plugin header on main is the single source of truth for the version — it is
+      # what WordPress itself reads, and build.sh has already substituted it.
+      - name: Read version from the plugin header
+        id: version
+        run: |
+          version=$(sed -n 's/^[[:space:]]*\*[[:space:]]*Version:[[:space:]]*\(.*\)$/\1/p' onik-images.php | head -1 | tr -d '[:space:]')
+          if [ -z "$version" ]; then
+            echo "::error::Could not read Version from onik-images.php header"
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Version on main: $version"
+
+      # Merges to main that are not a version bump (a docs fix, say) must not try to
+      # re-release an existing version.
+      - name: Skip if this version is already released
+        id: check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if gh release view "v${{ steps.version.outputs.version }}" > /dev/null 2>&1; then
+            echo "already=true" >> "$GITHUB_OUTPUT"
+            echo "v${{ steps.version.outputs.version }} is already released — nothing to do."
+          else
+            echo "already=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # WordPress unpacks the zip straight into wp-content/plugins/, so the archive must
+      # contain a single top-level onik-lens/ folder. GitHub's own auto-generated source
+      # archives are rooted at lens-wp-<tag>/ instead, which installs under the wrong
+      # directory name — that is exactly what this asset exists to replace.
+      - name: Build the installable zip
+        if: steps.check.outputs.already == 'false'
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          mkdir -p build/onik-lens
+          rsync -a --exclude '.git' --exclude '.github' --exclude 'build' ./ build/onik-lens/
+          (cd build && zip -qr "onik-lens-wp-${VERSION}.zip" onik-lens)
+          # A stable filename as well, so the /releases/latest/download/ URL keeps working.
+          cp "build/onik-lens-wp-${VERSION}.zip" build/onik-lens-wp-latest.zip
+
+          roots=$(unzip -Z1 "build/onik-lens-wp-${VERSION}.zip" | cut -d/ -f1 | sort -u)
+          if [ "$roots" != "onik-lens" ]; then
+            echo "::error::Zip must contain exactly one root folder (onik-lens), found: $roots"
+            exit 1
+          fi
+
+      # gh release create tags --target itself, so the tag lands on the merge commit that
+      # is on main. No tag is ever pushed for a change that was not accepted.
+      - name: Publish the release
+        if: steps.check.outputs.already == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          gh release create "v${VERSION}" \
+            --target "${GITHUB_SHA}" \
+            --title "v${VERSION}" \
+            --notes "ONIK Lens v${VERSION}
+
+          Install \`onik-lens-wp-${VERSION}.zip\` via wp-admin → Plugins → Add New → Upload Plugin.
+
+          Always-current download:
+          https://github.com/${GITHUB_REPOSITORY}/releases/latest/download/onik-lens-wp-latest.zip
+
+          Do not use the auto-generated \"Source code\" archives below: GitHub roots those at \`lens-wp-${VERSION}/\`, so they install under the wrong directory name. The attached zip unpacks to \`onik-lens/\`." \
+            "build/onik-lens-wp-${VERSION}.zip" \
+            "build/onik-lens-wp-latest.zip"
