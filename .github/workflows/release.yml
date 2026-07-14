@@ -51,19 +51,18 @@ jobs:
       # contain a single top-level onik-lens/ folder. GitHub's own auto-generated source
       # archives are rooted at lens-wp-<tag>/ instead, which installs under the wrong
       # directory name — that is exactly what this asset exists to replace.
+      # One asset, onik-lens.zip. The version is carried by the release itself, so there is
+      # nothing to encode in the filename — and a fixed name is what makes
+      # /releases/latest/download/onik-lens.zip a stable URL.
       - name: Build the installable zip
         if: steps.check.outputs.already == 'false'
-        env:
-          VERSION: ${{ steps.version.outputs.version }}
         run: |
           set -euo pipefail
           mkdir -p build/onik-lens
           rsync -a --exclude '.git' --exclude '.github' --exclude 'build' ./ build/onik-lens/
-          (cd build && zip -qr "onik-lens-wp-${VERSION}.zip" onik-lens)
-          # A stable filename as well, so the /releases/latest/download/ URL keeps working.
-          cp "build/onik-lens-wp-${VERSION}.zip" build/onik-lens-wp-latest.zip
+          (cd build && zip -qr onik-lens.zip onik-lens)
 
-          roots=$(unzip -Z1 "build/onik-lens-wp-${VERSION}.zip" | cut -d/ -f1 | sort -u)
+          roots=$(unzip -Z1 build/onik-lens.zip | cut -d/ -f1 | sort -u)
           if [ "$roots" != "onik-lens" ]; then
             echo "::error::Zip must contain exactly one root folder (onik-lens), found: $roots"
             exit 1
@@ -71,7 +70,13 @@ jobs:
 
       # gh release create tags --target itself, so the tag lands on the merge commit that
       # is on main. No tag is ever pushed for a change that was not accepted.
-      - name: Publish the release
+      # Published as a PRE-RELEASE, deliberately. Merging to main cuts the release, but does
+      # not bless it: GitHub excludes prereleases from /releases/latest/, so the stable
+      # download URL keeps serving the last promoted release until a human is satisfied with
+      # this one and clears the "pre-release" flag on it (Releases -> Edit -> uncheck
+      # "Set as a pre-release", tick "Set as the latest release"). Until then, nobody
+      # downloading the latest URL gets an unvetted build.
+      - name: Publish the release (pre-release)
         if: steps.check.outputs.already == 'false'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -80,13 +85,15 @@ jobs:
           gh release create "v${VERSION}" \
             --target "${GITHUB_SHA}" \
             --title "v${VERSION}" \
+            --prerelease \
             --notes "ONIK Lens v${VERSION}
 
-          Install \`onik-lens-wp-${VERSION}.zip\` via wp-admin → Plugins → Add New → Upload Plugin.
+          **Pre-release.** Not yet promoted, so the always-current download URL below still points at the previous release. Promote this one by editing the release: uncheck *Set as a pre-release*, tick *Set as the latest release*.
 
-          Always-current download:
-          https://github.com/${GITHUB_REPOSITORY}/releases/latest/download/onik-lens-wp-latest.zip
+          Install the attached \`onik-lens.zip\` via wp-admin → Plugins → Add New → Upload Plugin.
+
+          Always-current download (serves the latest **promoted** release):
+          https://github.com/${GITHUB_REPOSITORY}/releases/latest/download/onik-lens.zip
 
           Do not use the auto-generated \"Source code\" archives below: GitHub roots those at \`lens-wp-${VERSION}/\`, so they install under the wrong directory name. The attached zip unpacks to \`onik-lens/\`." \
-            "build/onik-lens-wp-${VERSION}.zip" \
-            "build/onik-lens-wp-latest.zip"
+            build/onik-lens.zip
