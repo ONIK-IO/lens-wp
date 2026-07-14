@@ -21,7 +21,7 @@ Slow images are the primary reason WordPress sites fail Core Web Vitals like Lar
 ## Requirements
 
 - WordPress 6.0+
-- PHP 8.0+
+- PHP 8.1+
 - An [ONIK Lens](https://onik.io/wp/lens) account ($20 CAD/month, included with ONIK Monitoring, free trial available)
 
 ## Installation

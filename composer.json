@@ -1,6 +1,6 @@
 {
     "name": "onik/lens-wp",
-    "description": "ONIK Lens WordPress Plugin — optimizes images and YouTube embeds via the ONIK Lens CDN.",
+    "description": "ONIK Lens WordPress Plugin \u2014 optimizes images and YouTube embeds via the ONIK Lens CDN.",
     "type": "wordpress-plugin",
     "license": "GPL-2.0-or-later",
     "authors": [
@@ -9,13 +9,20 @@
             "homepage": "https://onik.io"
         }
     ],
-    "keywords": ["wordpress", "images", "cdn", "optimization", "youtube"],
+    "keywords": [
+        "wordpress",
+        "images",
+        "cdn",
+        "optimization",
+        "youtube"
+    ],
     "homepage": "https://onik.io/wp/lens",
     "support": {
         "issues": "https://github.com/ONIK-IO/lens-wp/issues",
         "source": "https://github.com/ONIK-IO/lens-wp"
     },
     "require": {
+        "php": ">=8.1",
         "composer/installers": "^1.0 || ^2.0",
         "symfony/css-selector": "^6.0"
     },
@@ -24,5 +31,10 @@
             "OnikImages\\": "src/"
         }
     },
-    "minimum-stability": "stable"
+    "minimum-stability": "stable",
+    "config": {
+        "allow-plugins": {
+            "composer/installers": true
+        }
+    }
 }
