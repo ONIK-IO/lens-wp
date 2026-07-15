@@ -300,14 +300,9 @@ function alter_html_hybrid($html, $current_path_override = null)
         return $html;
     }
 
-    // Check if the plugin is enabled
-    $enabled = get_option('onik_images_enabled');
-    if (!$enabled) {
-        return $html;
-    }
-
-    $activation = new \OnikImages\LensActivation();
-    if (!$activation->isActivated()) {
+    // Gate: enabled + activated (trial) + a valid connection once the site has
+    // connected. Centralized so the ob_start gate and this rewrite pass agree.
+    if (!onik_lens_should_process_images()) {
         return $html;
     }
 

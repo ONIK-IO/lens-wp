@@ -41,8 +41,10 @@ class GeneralRenderers
 
     public static function imageConverterUrl(): void
     {
-        FieldHelpers::text('onik_images_image_converter_url');
-        echo '<p>Enter the base URL for the ONIK image converter service. This field is required when ONIK Lens is enabled and must end with a trailing slash (/).</p>';
+        self::readonlyValue(
+            'onik_images_image_converter_url',
+            'Defaults to https://images.onik.io/. Only changed if ONIK sends a converter URL when you connect.'
+        );
     }
 
     public static function enabled(): void
@@ -92,12 +94,30 @@ class GeneralRenderers
 
     public static function tenant(): void
     {
-        FieldHelpers::text('onik_images_tenant');
+        self::readonlyValue('onik_images_tenant');
     }
 
     public static function site(): void
     {
-        FieldHelpers::text('onik_images_site');
+        self::readonlyValue('onik_images_site');
+    }
+
+    /**
+     * Display a connection-managed value (tenant, site, image converter URL)
+     * read-only. These are no longer editable — connecting a token is what
+     * sets them. The value is preserved across settings saves by the
+     * hidden-field loop in the settings-page view (they are omitted from
+     * $general_settings there).
+     */
+    private static function readonlyValue(string $name, string $description = 'Set automatically when you connect to ONIK.'): void
+    {
+        $value = (string) get_option($name, '');
+        if ($value !== '') {
+            echo '<code>' . esc_html($value) . '</code>';
+        } else {
+            echo '<span style="color:#888;">&#8212; not set</span>';
+        }
+        echo '<p class="description">' . esc_html($description) . '</p>';
     }
 
     public static function allowDomains(): void

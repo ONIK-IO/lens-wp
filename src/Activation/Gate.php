@@ -7,27 +7,6 @@ use OnikImages\LensActivation;
 class Gate
 {
     /**
-     * Handle the manual "Check Activation Now" form submission in the admin.
-     */
-    public static function handleFormSubmission(): void
-    {
-        if (!isset($_POST['onik_lens_activate_now'])) {
-            return;
-        }
-        if (!current_user_can('manage_options')) {
-            return;
-        }
-        check_admin_referer('onik_lens_activate_action', 'onik_lens_activate_nonce');
-        (new LensActivation())->activate();
-        wp_redirect(add_query_arg([
-            'page'                  => 'onik_images_settings',
-            'tab'                   => 'general',
-            'activation-attempted'  => '1',
-        ], admin_url('options-general.php')));
-        exit;
-    }
-
-    /**
      * Handle the Advanced Mode "Deactivate (test)" button. Clears the cached
      * activation state so the next admin page load behaves like a fresh
      * install. Strictly a testing affordance — only exposed when Advanced
@@ -57,23 +36,18 @@ class Gate
     }
 
     /**
-     * Re-activate if the cached check has expired. Gated on admin + manage_options.
+     * Re-run the activation check when the cached result has expired. Gated on
+     * admin + manage_options, so it only fires on admin page loads (every day
+     * or two, per the +24h next_check window).
      *
-     * Will NOT phone home before the user has explicitly initiated activation
-     * at least once (via the Activate button → handleFormSubmission). The
-     * signal for that is onik_lens_activation_next_check being set: it's
-     * empty by default and only gets stamped once LensActivation::activate()
-     * runs. This satisfies WP.org Plugin Guideline 7 (no automated data
-     * collection without user consent).
+     * Activation sends no personal data, so — unlike Connect — there is no
+     * consent gate: an empty next_check (fresh install, or a site upgrading
+     * from before the automatic-activation change) is treated as "due" and
+     * activates on the next admin load.
      */
     public static function checkIfDue(): void
     {
         if (!is_admin() || !current_user_can('manage_options')) {
-            return;
-        }
-
-        $next_check = get_option('onik_lens_activation_next_check', '');
-        if ($next_check === '' || $next_check === false) {
             return;
         }
 

@@ -2,8 +2,26 @@
 
 namespace OnikImages\Activation;
 
+use OnikImages\Cron\Verifier;
+use OnikImages\LensActivation;
+
 class Installer
 {
+    /**
+     * WordPress plugin-activation callback (register_activation_hook).
+     *
+     * Seeds defaults, then runs the subscription check immediately. Activation
+     * sends no personal data (see LensActivation::activate), so it can run
+     * automatically here rather than behind a consent dialog — the user
+     * activating the plugin is the trigger.
+     */
+    public static function onActivate(): void
+    {
+        self::install();
+        Verifier::schedule();
+        (new LensActivation())->activate();
+    }
+
     private const DEFAULTS = [
         'onik_images_forbidden_domains'      => 'localhost,127.0.0.1',
         'onik_images_allow_domains'          => '',
@@ -18,6 +36,13 @@ class Installer
         'onik_lens_activation_reason'        => '',
         'onik_lens_activation_message'       => '',
         'onik_lens_activation_next_check'    => '',
+        'onik_lens_activation_last_success'  => '',
+        'onik_lens_jwt'                      => '',
+        'onik_lens_connected'                => '0',
+        'onik_lens_connection_reason'        => '',
+        'onik_lens_connection_message'       => '',
+        'onik_lens_connection_next_check'    => '',
+        'onik_lens_connection_last_success'  => '',
     ];
 
     public static function install(bool $reset = false): void
@@ -32,11 +57,5 @@ class Installer
         if (get_option('onik_images_site') === false || $reset) {
             update_option('onik_images_site', preg_replace('#^https?://#', '', get_site_url()));
         }
-
-        // Intentionally do NOT call Gate::checkIfDue() here. WordPress.org
-        // Plugin Guideline 7 forbids "automated collection of user data
-        // without explicit confirmation". The activation API POST (which
-        // sends the admin email to onik.io) must wait until the user
-        // clicks Activate on the settings page — see Gate::handleFormSubmission.
     }
 }
