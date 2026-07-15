@@ -4,8 +4,12 @@
 
 namespace Composer\Autoload;
 
-class ComposerStaticInite6f6982adeaf46dffe78e607e1104145
+class ComposerStaticInit2b55377259a8a9ee4e6438061ea8d105
 {
+    public static $files = array (
+        'bc0af1337b39f0d750e835f5263eb646' => __DIR__ . '/..' . '/yahnis-elsts/plugin-update-checker/load-v5p7.php',
+    );
+
     public static $prefixLengthsPsr4 = array (
         'S' =>
         array (
@@ -142,6 +146,7 @@ class ComposerStaticInite6f6982adeaf46dffe78e607e1104145
         'OnikImages\\Admin\\AdvancedMode' => __DIR__ . '/../..' . '/src/Admin/AdvancedMode.php',
         'OnikImages\\Admin\\FieldHelpers' => __DIR__ . '/../..' . '/src/Admin/FieldHelpers.php',
         'OnikImages\\Admin\\Menu' => __DIR__ . '/../..' . '/src/Admin/Menu.php',
+        'OnikImages\\Admin\\PluginLinks' => __DIR__ . '/../..' . '/src/Admin/PluginLinks.php',
         'OnikImages\\Admin\\Renderers\\GeneralRenderers' => __DIR__ . '/../..' . '/src/Admin/Renderers/GeneralRenderers.php',
         'OnikImages\\Admin\\Renderers\\ImageSettingsRenderer' => __DIR__ . '/../..' . '/src/Admin/Renderers/ImageSettingsRenderer.php',
         'OnikImages\\Admin\\Renderers\\PreloadsRenderer' => __DIR__ . '/../..' . '/src/Admin/Renderers/PreloadsRenderer.php',
@@ -171,6 +176,7 @@ class ComposerStaticInite6f6982adeaf46dffe78e607e1104145
         'OnikImages\\Support\\Request' => __DIR__ . '/../..' . '/src/Support/Request.php',
         'OnikImages\\Support\\SizesParser' => __DIR__ . '/../..' . '/src/Support/SizesParser.php',
         'OnikImages\\Support\\SrcGate' => __DIR__ . '/../..' . '/src/Support/SrcGate.php',
+        'OnikImages\\Updates\\UpdateChecker' => __DIR__ . '/../..' . '/src/Updates/UpdateChecker.php',
         'Symfony\\Component\\CssSelector\\CssSelectorConverter' => __DIR__ . '/..' . '/symfony/css-selector/CssSelectorConverter.php',
         'Symfony\\Component\\CssSelector\\Exception\\ExceptionInterface' => __DIR__ . '/..' . '/symfony/css-selector/Exception/ExceptionInterface.php',
         'Symfony\\Component\\CssSelector\\Exception\\ExpressionErrorException' => __DIR__ . '/..' . '/symfony/css-selector/Exception/ExpressionErrorException.php',
@@ -224,9 +230,9 @@ class ComposerStaticInite6f6982adeaf46dffe78e607e1104145
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
-            $loader->prefixLengthsPsr4 = ComposerStaticInite6f6982adeaf46dffe78e607e1104145::$prefixLengthsPsr4;
-            $loader->prefixDirsPsr4 = ComposerStaticInite6f6982adeaf46dffe78e607e1104145::$prefixDirsPsr4;
-            $loader->classMap = ComposerStaticInite6f6982adeaf46dffe78e607e1104145::$classMap;
+            $loader->prefixLengthsPsr4 = ComposerStaticInit2b55377259a8a9ee4e6438061ea8d105::$prefixLengthsPsr4;
+            $loader->prefixDirsPsr4 = ComposerStaticInit2b55377259a8a9ee4e6438061ea8d105::$prefixDirsPsr4;
+            $loader->classMap = ComposerStaticInit2b55377259a8a9ee4e6438061ea8d105::$classMap;
 
         }, null, ClassLoader::class);
     }

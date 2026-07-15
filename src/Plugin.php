@@ -17,6 +17,15 @@ class Plugin
             register_deactivation_hook($pluginFile, [Cron\Verifier::class, 'unschedule']);
         }
 
+        // Native update prompts sourced from GitHub releases. Skipped under tests
+        // because the update-checker library does real WP work on construction.
+        if (!defined('ONIK_IMAGES_TESTS')) {
+            Updates\UpdateChecker::register($pluginFile);
+        }
+
+        // "Settings" shortcut on the Plugins listing row.
+        Admin\PluginLinks::register($pluginFile);
+
         add_action('admin_menu', [Admin\Menu::class, 'register']);
         add_action('admin_init', [Admin\AdvancedMode::class, 'checkToggle']);
         add_action('admin_init', [Admin\SettingsRegistry::class, 'register']);
