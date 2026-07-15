@@ -10,7 +10,7 @@ Slow images are the primary reason WordPress sites fail Core Web Vitals like Lar
 
 ## Key Features
 - **Instant results** — activate and your images are immediately served in the right format, at the right size (mobile or desktop), and from the edge.
-- **Modern Formats** AVIF, WebP, JPEG — Automatically uses the most efficient format supported by your visitors browsers
+- **Modern Formats** AVIF, WebP, JPEG — Automatically uses the most efficient format supported by your visitor's browser
 - **Lightweight & fast** — no image processing on your server, no bloated libraries, no background jobs. All the heavy lifting is offloaded to the edge so your server stays fast and lean.
 - **Non-destructive** — your WordPress Media Library is never modified; uninstall by simply deactivating the plugin
 - **Works everywhere** — optimizes images in media, theme assets, Sliders, page builders (Elementor, Divi, Beaver Builder, and more), and any HTML on the page
@@ -22,13 +22,13 @@ Slow images are the primary reason WordPress sites fail Core Web Vitals like Lar
 
 - WordPress 6.0+
 - PHP 8.1+
-- An [ONIK Lens](https://onik.io/wp/lens) account ($20 CAD/month, included with ONIK Monitoring, free trial available)
+- An [ONIK Lens](https://onik.io/wp/lens) account ($20 CAD/month, included with ONIK Monitoring, 30-day free trial without account or credit card)
 
 ## Installation
 
 ### Install in the WordPress Admin
 
-1. Download the latest release ZIP from the [GitHub Releases page](https://github.com/ONIK-IO/lens-wp/releases).
+1. [Download the latest release](https://github.com/ONIK-IO/lens-wp/releases/latest/download/onik-lens.zip).
 2. In your WordPress admin, go to **Plugins → Add New → Upload Plugin**.
 3. Select the downloaded ZIP file and click **Install Now**.
 4. Click **Activate Plugin**.
@@ -38,10 +38,24 @@ Slow images are the primary reason WordPress sites fail Core Web Vitals like Lar
 If you manage your WordPress installation with Composer (e.g. Bedrock or a custom stack):
 
 ```bash
-composer require onik/onik-lens
+composer require onik/lens-wp
 ```
 
 The plugin will be installed automatically into your plugins directory via `composer/installers`.
+
+## Connect the Plugin to your ONIK Account
+
+The plugin runs in a full-featured **free trial** the moment it's activated — no account or
+credit card required. To keep it running on a production site, connect it to your ONIK
+subscription:
+
+1. Log in to [app.onik.io](https://app.onik.io). You will have to create an account and register your site if you have not done so already.
+2. Open your site's details.
+3. In the left-hand menu, open **Lens Image Optimization**.
+4. Copy the site token shown on that page.
+5. In WordPress, go to **Settings → ONIK Lens** and find the **Connect to ONIK** panel on the General tab, paste in the token, and click **Connect to ONIK**.
+
+Your tenant, site, and CDN URL are filled in automatically once connected.
 
 ## Configuration
 
