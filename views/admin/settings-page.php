@@ -30,66 +30,19 @@ use OnikImages\LensActivation;
         settings_errors('onik_images_image_converter_url');
         settings_errors('onik_images_preloads');
 
-        // Activation notices
-        $activation     = new LensActivation();
-        $next_check     = get_option('onik_lens_activation_next_check', '');
-        $status         = $activation->getStatus();
-        $has_attempted  = $next_check !== '' && $next_check !== false;
-
-        if (isset($_GET['activation-attempted']) && $_GET['activation-attempted'] === '1') {
-            if ($activation->isActivated()) {
-                echo '<div class="notice notice-success is-dismissible"><p><strong>Activation successful!</strong> Your ONIK Lens account is active.</p></div>';
-            } else {
-                $msg = esc_html($status['message'] ?: $status['reason'] ?: 'Activation failed. Please check your credentials.');
-                $clear_url = esc_url(remove_query_arg('activation-attempted'));
-                echo '<div class="notice notice-error is-dismissible"><p><strong>Activation failed:</strong> ' . $msg . ' <a href="' . $clear_url . '">clear</a></p></div>';
-            }
-        } elseif (!$activation->isActivated()) {
-            // First-run or retry consent screen. The Activate button is the
-            // only way to trigger the onik.io API POST — Installer::install
-            // and Gate::checkIfDue intentionally do not phone home until
-            // the user has clicked Activate at least once (WP.org Guideline 7).
-            $nonce_field = wp_nonce_field('onik_lens_activate_action', 'onik_lens_activate_nonce', true, false);
-            $action_url  = esc_url(admin_url('options-general.php?page=onik_images_settings'));
-            $admin_email = (string) get_option('admin_email', '');
-            $site_url    = (string) get_site_url();
-            $site_name   = (string) get_bloginfo('name');
-            $version     = defined('ONIK_IMAGES_VERSION') ? ONIK_IMAGES_VERSION : '';
-
-            $heading      = $has_attempted ? 'ONIK Lens is not activated' : 'Welcome to ONIK Lens';
-            $button_label = $has_attempted ? 'Retry Activation' : 'Activate ONIK Lens';
-            $notice_class = $has_attempted ? 'notice-warning' : 'notice-info';
-            ?>
-            <div class="notice <?php echo esc_attr($notice_class); ?>" style="padding: 12px 16px;">
-                <h3 style="margin-top:0;"><?php echo esc_html($heading); ?></h3>
-                <?php if ($has_attempted): ?>
-                    <p><strong>Last attempt:</strong>
-                        <?php echo esc_html($status['message'] ?: $status['reason'] ?: 'Your account could not be verified.'); ?>
-                    </p>
-                <?php else: ?>
-                    <p>ONIK Lens uses an external CDN service to optimize images. Before optimization can begin we need to verify your site against <a href="https://onik.io/wp/lens" target="_blank" rel="noopener">your ONIK Lens account</a>.</p>
-                <?php endif; ?>
-
-                <p><strong>Clicking Activate will send the following data to <code>app.onik.io</code> over HTTPS:</strong></p>
-                <ul style="list-style: disc; margin: 4px 0 10px 24px;">
-                    <li>Site URL — <code><?php echo esc_html($site_url); ?></code></li>
-                    <li>Site name — <code><?php echo esc_html($site_name); ?></code></li>
-                    <li>WordPress admin email — <code><?php echo esc_html($admin_email); ?></code></li>
-                    <li>Plugin version</li>
-                </ul>
-                <p style="font-size: 13px; color: #555;">By clicking Activate you consent to this data transfer and agree to the
-                    <a href="https://onik.io/wp/lens" target="_blank" rel="noopener">ONIK Lens Terms &amp; Privacy Policy</a>.
-                    You can revoke at any time by deactivating the plugin; no further data will be sent.</p>
-
-                <form method="post" action="<?php echo $action_url; ?>" style="margin-top: 8px;">
-                    <input type="hidden" name="onik_lens_activate_now" value="1" />
-                    <?php echo $nonce_field; ?>
-                    <p style="margin-bottom:0;">
-                        <input type="submit" class="button button-primary" value="<?php echo esc_attr($button_label); ?>" />
-                    </p>
-                </form>
-            </div>
-            <?php
+        // Activation status. Activation is automatic — it runs on plugin
+        // activation and re-checks periodically on admin page loads (see
+        // Activation\Installer::onActivate and Activation\Gate::checkIfDue).
+        // It sends no personal data, so there is no consent dialog or button.
+        $activation = new LensActivation();
+        if (!$activation->isActivated()) {
+            $status = $activation->getStatus();
+            $msg    = esc_html($status['message'] ?: $status['reason'] ?: 'Verifying your ONIK Lens subscription…');
+            echo '<div class="notice notice-warning" style="padding: 12px 16px;">'
+                . '<p><strong>ONIK Lens is not active yet.</strong> ' . $msg . '</p>'
+                . '<p style="font-size:13px;color:#555;margin-bottom:0;">Activation is automatic and retries on its own. '
+                . 'Rewriting stays off until your <a href="https://onik.io/wp/lens" target="_blank" rel="noopener">ONIK Lens subscription</a> is verified.</p>'
+                . '</div>';
         }
         ?>
 
@@ -117,6 +70,15 @@ use OnikImages\LensActivation;
                 </a>
             <?php endif; ?>
         </h2>
+
+        <?php
+        // Connect panel: paste the ONIK site token to link this site and sync
+        // tenant/site. General tab only, and rendered outside the settings
+        // form below (it posts to its own admin-post handler; see AdminPanel).
+        if ($current_tab === 'general') {
+            \OnikImages\Connect\AdminPanel::render();
+        }
+        ?>
 
         <form action="options.php" method="post">
             <?php
@@ -165,12 +127,15 @@ use OnikImages\LensActivation;
             // fields (see Admin\SettingsRegistry::registerFields), so they
             // must fall through to the hidden-field preservation path or
             // WordPress will wipe them to '' on submit.
+            // NOTE: onik_images_tenant / onik_images_site /
+            // onik_images_image_converter_url are deliberately NOT listed here
+            // even in advanced mode. They are display-only (set by the ONIK
+            // connection, not editable), so they render no input and must fall
+            // through to the hidden-field preservation path below — otherwise
+            // WordPress would wipe them on submit.
             $general_settings = ['onik_images_enabled'];
 
             if ($advanced) {
-                $general_settings[] = 'onik_images_image_converter_url';
-                $general_settings[] = 'onik_images_tenant';
-                $general_settings[] = 'onik_images_site';
                 $general_settings[] = 'onik_images_allow_domains';
                 $general_settings[] = 'onik_images_forbidden_domains';
                 $general_settings[] = 'onik_images_debug';

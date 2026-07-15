@@ -138,6 +138,42 @@ function onik_images_enqueue_youtube_assets()
 
 
 
+/**
+ * Whether the plugin may rewrite front-end output for this site right now.
+ *
+ * Three gates, all required:
+ *   - onik_images_enabled — the plugin on/off switch.
+ *   - Activation — the anonymous subscription/trial check. A site runs in
+ *     "trial mode" on activation alone. The server can deny activation at any
+ *     time (activated=false) to stop processing, and re-allow it to resume.
+ *   - Connection — enforced only once the site has connected (a token is
+ *     stored). A lapsed subscription comes back from the connect endpoint as
+ *     isConnected=false, which stops processing. Sites that never connected
+ *     are unaffected and keep running on the trial/activation gate.
+ *
+ * Transient network errors never change the activated/connected verdicts (see
+ * LensActivation::storeHttpError / LensConnection::storeHttpError), so a blip
+ * during the periodic admin check cannot deactivate a live site — only an
+ * explicit server response can.
+ */
+function onik_lens_should_process_images()
+{
+    if (!get_option('onik_images_enabled')) {
+        return false;
+    }
+
+    if (!(new \OnikImages\LensActivation())->isActivated()) {
+        return false;
+    }
+
+    $connection = new \OnikImages\LensConnection();
+    if ($connection->hasToken() && !$connection->isConnected()) {
+        return false;
+    }
+
+    return true;
+}
+
 function onik_images_register_ob_start()
 {
     // Only start output buffering if not running tests
@@ -154,8 +190,7 @@ function onik_images_register_ob_start()
     if (onik_images_get_current_request_path() && strpos(onik_images_get_current_request_path(), '/wp-json/') !== false) {
         return;
     }
-    // if is activated, return
-    if (get_option('onik_lens_activated') !== '1') {
+    if (!onik_lens_should_process_images()) {
         return;
     }
     ob_start('alter_html');

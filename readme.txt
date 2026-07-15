@@ -30,26 +30,33 @@ Slow images are the primary reason WordPress sites fail Core Web Vitals like Lar
 == Installation ==
 
 1. Upload the plugin files to `/wp-content/plugins/onik-images/`, or install the plugin through the WordPress plugins screen directly.
-2. Activate the plugin through the **Plugins** screen.
+2. Activate the plugin through the **Plugins** screen. Activation verifies your subscription automatically — no personal data is sent.
 3. Go to **Settings → ONIK Lens**.
-4. On first visit you'll see an activation panel that lists exactly what data will be sent to `app.onik.io`. Click **Activate ONIK Lens** to consent and complete activation.
-5. Once activated, your images are served via the ONIK Lens CDN. Default settings work great out of the box; tailor them on the settings page if needed.
+4. The plugin works immediately in **free trial mode** — fully featured, so you can test ONIK Lens on your site. A subscription is required for production sites; see [onik.io/pricing](https://onik.io/pricing).
+5. To connect your subscription: open your site at [app.onik.io](https://app.onik.io) (create an account and register your site if needed), open **Lens Image Optimization** in the left-hand menu, copy the token, and paste it into the **Connect to ONIK** panel on the plugin's General tab. This links your site and configures your tenant and site automatically.
 
 You need an [ONIK Lens account](https://onik.io/wp/lens) to use this plugin. A free trial is available.
 
 == External services ==
 
-This plugin connects to two external services to function. Both are operated by ONIK.
+This plugin connects to three external services to function. All are operated by ONIK.
 
 **1. ONIK Lens activation service — `https://app.onik.io/api/lens/activate`**
 
-* **When it's called:** only when you click the **Activate ONIK Lens** button on the settings page, and periodically afterward (every 24 hours on success, every 1 hour on failure) to re-verify your account is still active.
-* **What is sent:** the WordPress site URL, site name, WordPress admin email address, your configured ONIK tenant + site slug, and the plugin version. The request is HTTPS-only.
-* **Why it's sent:** to verify that your site is associated with an active ONIK Lens account before image optimization is enabled.
+* **When it's called:** automatically when you activate the plugin, and periodically afterward on admin page loads (every 24 hours on success, every 1 hour on failure) to re-verify your subscription is still active.
+* **What is sent:** the WordPress site URL, site name, your configured ONIK tenant + site slug, and the plugin version. **No personal data is sent** (no admin email). The request is HTTPS-only.
+* **Why it's sent:** to verify that your site is associated with an active ONIK Lens subscription before image optimization is enabled.
 * **What is stored:** ONIK stores the data above against your account record for billing and support purposes. See [ONIK Privacy Policy](https://onik.io/wp/lens) for details.
-* **How to stop:** deactivating the plugin halts all further calls. No data is sent before you click Activate.
+* **How to stop:** deactivating the plugin halts all further calls.
 
-**2. ONIK Lens image CDN — `https://images.onik.io/`**
+**2. ONIK Lens connect service — `https://app.onik.io/api/connect/site-token`**
+
+* **When it's called:** only when you paste a site token and click **Connect to ONIK** on the settings page, and periodically afterward on admin page loads (every 24 hours) to refresh the token.
+* **What is sent:** the ONIK site token (a signed JSON Web Token) you obtained from the Lens Image Optimization page at app.onik.io. The request is HTTPS-only.
+* **Why it's sent:** to link this site to your ONIK account and retrieve your tenant and site identifiers, which are used to build CDN image URLs. The response returns a fresh, rotated token that replaces the stored one.
+* **How to stop:** deactivating the plugin halts all further calls. No token is sent before you click Connect.
+
+**3. ONIK Lens image CDN — `https://images.onik.io/`**
 
 * **When it's called:** every time a page on your site is rendered, after activation. Your visitor's browser fetches optimized image variants directly from this CDN.
 * **What is sent:** the public URL of each image to be optimized (appended to the CDN path), plus standard HTTP request metadata from the visitor's browser (User-Agent, Accept headers, IP).
@@ -62,7 +69,7 @@ By using this plugin you also agree to the [ONIK Lens Terms of Service](https://
 
 ONIK Lens does not set any cookies, does not track site visitors directly, and does not collect any data from the WordPress admin user beyond what is listed in the **External services** section above. All transfers to ONIK servers are over HTTPS.
 
-The activation HTTP POST is only sent when the WordPress administrator clicks the **Activate ONIK Lens** button on the plugin settings page. The data shown in the consent panel at that time is the entire data set sent — there are no hidden fields.
+The activation HTTP POST carries no personal data — only the site URL, site name, ONIK tenant/site slug, and plugin version. The connect HTTP POST carries only the ONIK site token you paste in yourself, and is sent only when you click **Connect to ONIK**.
 
 GDPR-aware site operators should disclose the use of the ONIK Lens CDN in their own site privacy notice if their visitors are in jurisdictions that require it, since image requests will route through `images.onik.io` once activated.
 
@@ -94,7 +101,7 @@ No data is collected by the plugin from visitors. Once activated, visitor browse
 * Initial WordPress.org release.
 * Refactored into namespaced modules.
 * Tightened settings sanitization (tab whitelist, URL scheme check, text-field sanitizers).
-* Activation API call now requires explicit user consent via the Activate button on the settings page.
+* Split Activate and Connect: activation is automatic and sends no personal data; a new **Connect to ONIK** panel exchanges a site token (JWT) for your tenant/site and refreshes it periodically.
 
 == Upgrade Notice ==
 
