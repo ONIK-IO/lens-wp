@@ -27,6 +27,20 @@ function onik_images_element_is_ignored($element)
     }
 
     $parentNode = $element->parentNode;
+
+    // libxml does not know <source> is void, so inside a <picture> it builds
+    // picture > source > source > img rather than three siblings. Those <source>
+    // links are a parse artifact, not authored structure, so step over them to
+    // reach the element's real parent — otherwise onik-ignore on a <picture>
+    // silently fails to protect anything but its first <source>.
+    while (
+        $parentNode
+        && $parentNode->nodeType === XML_ELEMENT_NODE
+        && strtolower($parentNode->tagName) === 'source'
+    ) {
+        $parentNode = $parentNode->parentNode;
+    }
+
     if ($parentNode && $parentNode->nodeType === XML_ELEMENT_NODE) {
         $parentClasses = preg_split('/\s+/', trim($parentNode->getAttribute('class')));
         if (in_array('onik-ignore', $parentClasses)) {
@@ -54,6 +68,9 @@ function onik_images_find_original_source($element, $html)
             break;
         case 'iframe':
             $found = findOriginalIframeHtml($element, $html);
+            break;
+        case 'source':
+            $found = findOriginalSourceTagHtml($element, $html);
             break;
         default:
             return null;
@@ -93,7 +110,7 @@ function onik_images_mask_ignored_elements($html, $dom, &$masks)
     }
 
     $xpath = new DOMXPath($dom);
-    $candidates = $xpath->query('//img | //iframe | //div | //span');
+    $candidates = $xpath->query('//img | //iframe | //div | //span | //source');
     if ($candidates === false || $candidates->length === 0) {
         return $html;
     }
@@ -391,6 +408,31 @@ function alter_html_hybrid($html, $current_path_override = null)
 
                         $modifications = array_merge($modifications, $newModifications);
                         $processedImageCounts[$selector]++;
+                        $processedElements->attach($element);
+
+                        // A <picture>'s <source> candidates outrank its <img> — the
+                        // browser never reaches <img src> while a media query matches.
+                        // They are the same image at other sizes, so they take the same
+                        // config, and sweeping them off the <img> match means existing
+                        // installs get picture coverage with no settings change.
+                        foreach (onik_images_picture_sources($element) as $sourceTag) {
+                            if ($processedElements->contains($sourceTag)) {
+                                continue;
+                            }
+                            if (onik_images_element_is_ignored($sourceTag)) {
+                                continue;
+                            }
+                            $modifications = array_merge(
+                                $modifications,
+                                collectSourceModifications($sourceTag, $appendLocation, $selector, $config, $html)
+                            );
+                            $processedElements->attach($sourceTag);
+                        }
+                    } else if ($element->tagName == 'source') {
+                        $modifications = array_merge(
+                            $modifications,
+                            collectSourceModifications($element, $appendLocation, $selector, $config, $html)
+                        );
                         $processedElements->attach($element);
                     } else if ($element->tagName == 'div' || $element->tagName == 'span') {
                         $modifications = array_merge(

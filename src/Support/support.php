@@ -3,6 +3,7 @@
  * Leaf utilities used across the rewriter and admin layers.
  *
  *   extractWidthsFromSizes($sizesAttribute) -> int[]
+ *   onik_images_parse_srcset($srcset)        -> [['url','descriptor'], ...]
  *   should_alter_image_based_on_src($src)    -> bool
  *   onik_images_query_css($dom, $selector)   -> DOMNodeList|false
  *   onik_images_get_current_request_path($override = null) -> string|null
@@ -39,6 +40,68 @@ function extractWidthsFromSizes($sizesAttribute)
     $widths = array_unique($widths);
     sort($widths);
     return $widths;
+}
+
+/**
+ * Split a srcset attribute into its candidates.
+ *
+ * Returns [['url' => string, 'descriptor' => string], ...] where descriptor is
+ * '' (bare URL), '500w', or '2x'. Follows the HTML srcset parsing algorithm:
+ * a candidate's URL runs to the next *whitespace*, never to the next comma, so
+ * commas inside a URL (Cloudinary-style transform segments,
+ * .../upload/w_500,q_80/img.jpg) do not split it into two broken candidates the
+ * way a plain explode(',') does.
+ *
+ * @param string $srcset Raw attribute value.
+ * @return array
+ */
+function onik_images_parse_srcset($srcset)
+{
+    if (!is_string($srcset) || trim($srcset) === '') {
+        return [];
+    }
+
+    $whitespace = " \t\n\r\f";
+    $candidates = [];
+    $length = strlen($srcset);
+    $pos = 0;
+
+    while ($pos < $length) {
+        // Skip the whitespace and separator commas between candidates.
+        while ($pos < $length && strpos($whitespace . ',', $srcset[$pos]) !== false) {
+            $pos++;
+        }
+        if ($pos >= $length) {
+            break;
+        }
+
+        $start = $pos;
+        while ($pos < $length && strpos($whitespace, $srcset[$pos]) === false) {
+            $pos++;
+        }
+        $url = substr($srcset, $start, $pos - $start);
+
+        $descriptor = '';
+        if (substr($url, -1) === ',') {
+            // A comma glued to the URL ends the candidate — no descriptor follows.
+            $url = rtrim($url, ',');
+        } else {
+            $start = $pos;
+            while ($pos < $length && $srcset[$pos] !== ',') {
+                $pos++;
+            }
+            $descriptor = trim(substr($srcset, $start, $pos - $start), $whitespace);
+            if ($pos < $length) {
+                $pos++; // Consume the separator.
+            }
+        }
+
+        if ($url !== '') {
+            $candidates[] = ['url' => $url, 'descriptor' => $descriptor];
+        }
+    }
+
+    return $candidates;
 }
 
 function should_alter_image_based_on_src($src)

@@ -159,13 +159,11 @@ function collectImgModifications($imgTag, $location, $selector, $config, $proces
         if ($existingSrcset && !$widthsFromConfig) {
             // Transform existing srcset
             $newSources = [];
-            $parts = explode(',', $existingSrcset);
-            foreach ($parts as $part) {
-                $part = trim($part);
-                if (preg_match('/^(\S+)\s+(\d+w)$/', $part, $matches)) {
-                    $url = $matches[1];
-                    $descriptor = $matches[2];
-                    $width = (int) substr($descriptor, 0, -1);
+            foreach (onik_images_parse_srcset($existingSrcset) as $candidate) {
+                if (preg_match('/^(\d+)w$/', $candidate['descriptor'], $matches)) {
+                    $url = $candidate['url'];
+                    $descriptor = $candidate['descriptor'];
+                    $width = (int) $matches[1];
 
                     $sourceUrl = $location . rawurlencode($url) . "?quality=" . $quality . "&width=" . $width;
                     if ($format !== "") {
@@ -188,7 +186,13 @@ function collectImgModifications($imgTag, $location, $selector, $config, $proces
             }
         } else {
             $newSrcsetVal = implode(', ', $sources);
-            if ($existingSrcset) {
+            if ($existingSrcset && $newSrcsetVal === "") {
+                // No configured widths means no candidates. The existing srcset still
+                // has to go — leaving it would keep handing the browser origin URLs to
+                // choose from — but drop the attribute rather than blank it, so the
+                // fallback to src is stated the same way everywhere.
+                $newImgHtml = str_replace(' srcset="' . $existingSrcset . '"', '', $newImgHtml);
+            } elseif ($existingSrcset) {
                 $newImgHtml = str_replace('srcset="' . $existingSrcset . '"', 'srcset="' . $newSrcsetVal . '"', $newImgHtml);
                 if ($sizes !== "") {
                     if (strpos($newImgHtml, 'sizes=') !== false) {
@@ -197,7 +201,11 @@ function collectImgModifications($imgTag, $location, $selector, $config, $proces
                         $newImgHtml = str_replace('<img', '<img sizes="' . $sizes . '"', $newImgHtml);
                     }
                 }
-            } else {
+            } elseif ($newSrcsetVal !== "") {
+                // Only when there is something to add. With no widths configured
+                // there are no candidates, and writing srcset="" onto an <img> that
+                // never had the attribute is pure noise — the browser falls back to
+                // src either way.
                 // When adding a new srcset, preserve existing sizes or use config sizes
                 $existingSizes = $imgTag->getAttribute('sizes');
                 $sizesToUse = ($sizes !== "") ? $sizes : $existingSizes;
