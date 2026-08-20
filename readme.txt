@@ -4,7 +4,7 @@ Tags: images, cdn, webp, avif, youtube, performance, lazy-load, core-web-vitals
 Requires at least: 6.0
 Tested up to: 6.4
 Requires PHP: 8.1
-Stable tag: 0.17.260725
+Stable tag: 0.18.260820
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -97,7 +97,7 @@ No data is collected by the plugin from visitors. Once activated, visitor browse
 
 == Changelog ==
 
-= 0.17.260725 =
+= 0.18.260820 =
 * Initial WordPress.org release.
 * Refactored into namespaced modules.
 * Tightened settings sanitization (tab whitelist, URL scheme check, text-field sanitizers).
@@ -105,5 +105,5 @@ No data is collected by the plugin from visitors. Once activated, visitor browse
 
 == Upgrade Notice ==
 
-= 0.17.260725 =
+= 0.18.260820 =
 First public release.

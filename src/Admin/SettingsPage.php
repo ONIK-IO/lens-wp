@@ -19,6 +19,7 @@ class SettingsPage
         'image_settings',
         'youtube_facade',
         'preloads',
+        'css_backgrounds',
         'regex_replace',
     ];
 

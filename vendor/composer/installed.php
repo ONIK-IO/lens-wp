@@ -3,7 +3,7 @@
         'name' => 'onik/lens-wp',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => '498d305dc555fecb68172a4ad977ef4026a9283f',
+        'reference' => '01b26063832974e2b9e6211405970618a21daffe',
         'type' => 'wordpress-plugin',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -22,7 +22,7 @@
         'onik/lens-wp' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => '498d305dc555fecb68172a4ad977ef4026a9283f',
+            'reference' => '01b26063832974e2b9e6211405970618a21daffe',
             'type' => 'wordpress-plugin',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
