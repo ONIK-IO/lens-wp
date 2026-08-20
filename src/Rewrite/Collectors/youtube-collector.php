@@ -223,6 +223,30 @@ function onik_images_extract_youtube_video_id($src)
 }
 
 /**
+ * The accessible name the source embed carried, or '' when it had none.
+ *
+ * Only the element's own title is considered. An empty or whitespace-only title
+ * counts as absent -- it names the video no better than the video id does.
+ *
+ * @param DOMElement $original_element The iframe (or Divi div) being replaced.
+ * @return string
+ */
+
+function onik_images_youtube_iframe_title($original_element)
+{
+    if (!$original_element->hasAttribute('title')) {
+        return '';
+    }
+
+    // Collapse the newlines and runs of spaces that oembed titles pick up when a
+    // theme pretty-prints its markup; they would otherwise land in the button
+    // label verbatim.
+    $title = preg_replace('/\s+/u', ' ', $original_element->getAttribute('title'));
+
+    return trim((string) $title);
+}
+
+/**
  * Create a lite-youtube element to replace a YouTube iframe
  * 
  * @param DOMDocument $dom The DOM document
@@ -274,9 +298,27 @@ function onik_images_create_lite_youtube_element($dom, $video_id, $original_ifra
         }
     }
 
-    // Set default playlabel if not provided
+    // Set default playlabel if not provided.
+    //
+    // The facade's play button is the only thing a screen reader has to go on
+    // until the video is activated, and lite-youtube reuses [playlabel] as the
+    // real iframe's title once it is. WordPress's oembed handler already puts
+    // the video's title on the iframe it emits, so inherit that rather than
+    // announcing the raw video id -- "Play: dQw4w9WgXcQ" tells a listener
+    // nothing about what they are about to play.
+    //
+    // Only [playlabel] is derived from the title, never [title]: lite-youtube
+    // renders a [title] into a visible caption bar over the poster
+    // (lite-yt-embed.css draws content: attr(data-title)), so setting it here
+    // would change how every existing embed looks. That stays opt-in through
+    // the per-selector "title" setting handled above.
     if (!$lite_youtube->hasAttribute('playlabel')) {
-        $lite_youtube->setAttribute('playlabel', 'Play: ' . $video_id);
+        $iframe_title = onik_images_youtube_iframe_title($original_iframe);
+
+        $lite_youtube->setAttribute(
+            'playlabel',
+            'Play: ' . ($iframe_title !== '' ? $iframe_title : $video_id)
+        );
     }
 
     return $lite_youtube;

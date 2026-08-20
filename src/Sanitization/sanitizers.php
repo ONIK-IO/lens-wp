@@ -229,7 +229,7 @@ function onik_images_validate_image_settings($json_string)
 
         // Validate srcSwap if present
         if (isset($config['srcSwap'])) {
-            $valid_srcswap_values = ['srcSet', 'src', 'srcAndSrcSet', 'InlineStyleUrl'];
+            $valid_srcswap_values = ['srcSet', 'src', 'srcAndSrcSet', 'InlineStyleUrl', 'ExternalCssUrl'];
             if (!in_array($config['srcSwap'], $valid_srcswap_values)) {
                 $errors[] = "Selector '$selector' srcSwap must be one of: " . implode(', ', $valid_srcswap_values);
             }

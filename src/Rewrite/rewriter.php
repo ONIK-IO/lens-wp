@@ -485,6 +485,24 @@ function alter_html_hybrid($html, $current_path_override = null)
         }
     }
 
+    // Background images that live in stylesheet FILES are invisible to the
+    // rewriter, so they are handled by re-declaring the rule later in the head
+    // and letting the cascade choose. This must land AFTER the preload string
+    // so the override is the last thing in <head>.
+    $cssOverrideStats = null;
+    $cssOverrideBlock = '';
+    if (!empty($selectorWidthMapping)) {
+        $cssOverrideBlock = \OnikImages\Css\OverrideBuilder::build(
+            $dom,
+            $selectorWidthMapping,
+            $appendLocation,
+            $cssOverrideStats
+        );
+        if ($cssOverrideBlock !== '') {
+            $modifiedHtml = str_replace('</head>', $cssOverrideBlock . '</head>', $modifiedHtml);
+        }
+    }
+
 
     foreach ($modifications as $modification) {
         $modIndex++;
@@ -556,6 +574,7 @@ Append Location: ' . $appendLocation . '
 Processed Image Counts: ' . json_encode($processedImageCounts) . '
 YouTube Enabled: ' . ($youtube_enabled ? 'true' : 'false') . '
 Applied Preloads: ' . count($preloads) . '
+CSS Override: ' . json_encode($cssOverrideStats) . '
 Modifications Applied: ' . count($modifications) . '
 
 Modifications Debug: ' . $modificationsDebug . '

@@ -63,6 +63,10 @@ use OnikImages\LensActivation;
                 class="nav-tab <?php echo $current_tab === 'preloads' ? 'nav-tab-active' : ''; ?>">
                 Preloads
             </a>
+            <a href="?page=onik_images_settings&tab=css_backgrounds"
+                class="nav-tab <?php echo $current_tab === 'css_backgrounds' ? 'nav-tab-active' : ''; ?>">
+                CSS Backgrounds
+            </a>
             <?php if ($advanced): ?>
                 <a href="?page=onik_images_settings&tab=regex_replace"
                     class="nav-tab <?php echo $current_tab === 'regex_replace' ? 'nav-tab-active' : ''; ?>">
@@ -80,6 +84,18 @@ use OnikImages\LensActivation;
         }
         ?>
 
+        <?php
+        // CSS Backgrounds is a discovery tool, not a settings form. It renders
+        // its own GET search form and per-row admin-post buttons, so the
+        // options.php form below is skipped entirely on this tab (it would
+        // otherwise fall through to the General page slug and render the wrong
+        // fields, and nesting forms is invalid HTML).
+        if ($current_tab === 'css_backgrounds') {
+            \OnikImages\Css\AdminPanel::render();
+        }
+        ?>
+
+        <?php if ($current_tab !== 'css_backgrounds'): ?>
         <form action="options.php" method="post">
             <?php
             settings_fields('onik_images_settings');
@@ -184,6 +200,7 @@ use OnikImages\LensActivation;
                     onclick="return confirm('Are you sure you want to reset all settings to their default values? This action cannot be undone.');">
             </p>
         </form>
+        <?php endif; ?>
 
 
         <?php if ($current_tab === 'image_settings'): ?>

@@ -60,9 +60,9 @@
       },
       "srcSwap": {
         "type": "string",
-        "enum": ["srcSet", "src", "srcAndSrcSet", "InlineStyleUrl"],
+        "enum": ["srcSet", "src", "srcAndSrcSet", "InlineStyleUrl", "ExternalCssUrl"],
         "default": "srcSet",
-        "description": "Controls which image attributes to swap. 'srcSet' for responsive images with srcset attribute, 'src' for single image with src attribute, 'srcAndSrcSet' for both attributes, 'InlineStyleUrl' for inline CSS background-image URLs"
+        "description": "Controls which image attributes to swap. 'srcSet' for responsive images with srcset attribute, 'src' for single image with src attribute, 'srcAndSrcSet' for both attributes, 'InlineStyleUrl' for background-image URLs in inline <style> blocks, 'ExternalCssUrl' for background-image URLs in enqueued stylesheet files"
       },
       "setWidth": {
         "type": ["integer", "null"],

@@ -38,6 +38,8 @@ class Plugin
         add_action('admin_init', [Connect\Gate::class, 'handleFormSubmission']);
         add_action('admin_init', [Connect\Gate::class, 'handleDisconnect']);
         add_action('admin_init', [Connect\Gate::class, 'checkIfDue']);
+        // CSS Backgrounds tab: adds a discovered selector to image settings.
+        add_action('admin_init', [Css\Gate::class, 'handleAddSelector']);
         // Background re-verification so a valid site stays fresh without any
         // admin login. `schedule` is idempotent; `init` fires on all requests.
         add_action('init', [Cron\Verifier::class, 'schedule']);

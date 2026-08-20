@@ -247,10 +247,12 @@ class ImageSettingsRenderer
                                     <option value="src">src</option>
                                     <option value="srcAndSrcSet">srcAndSrcSet</option>
                                     <option value="InlineStyleUrl">InlineStyleUrl</option>
+                                    <option value="ExternalCssUrl">ExternalCssUrl</option>
                                 </select>
-                                <p class="description">"srcSet", "src", "srcAndSrcSet", or "InlineStyleUrl" to control which
-                                    image attributes to
-                                    swap (default: "srcSet"). Use "InlineStyleUrl" for inline CSS background-image URLs.</p>
+                                <p class="description">Controls which image attributes to swap (default: "srcSet").
+                                    Use "InlineStyleUrl" for background-image URLs in inline &lt;style&gt; blocks, and
+                                    "ExternalCssUrl" for background-image URLs in enqueued stylesheet files. The CSS
+                                    Backgrounds tab finds candidates for the latter.</p>
                             </td>
                         </tr>
                         <tr>
