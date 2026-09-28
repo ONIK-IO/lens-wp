@@ -33,6 +33,32 @@ jobs:
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "Version on main: $version"
 
+      # A pre-release suffix on that version is the ONLY switch. There is no second flag to
+      # forget to flip: 0.18.260820-dev publishes as a pre-release, 0.18.260820 publishes as
+      # the latest release, and the header build.sh stamped decides which.
+      #
+      # The suffix set is checked here as well as in build.sh, because the two consequences
+      # of getting it wrong are not symmetrical. `-patch1`, `-pl1` and `-p1` are all valid
+      # Composer versions of STABLE stability — tag one of those and the "pre-release" goes
+      # out on Packagist as the newest stable version, into everyone's `composer update`,
+      # while GitHub still shows it as unreleased. Refuse to publish rather than guess.
+      - name: Classify the release
+        id: kind
+        run: |
+          set -euo pipefail
+          version="${{ steps.version.outputs.version }}"
+          suffix="${version#*-}"
+          if [ "$suffix" = "$version" ]; then
+            echo "prerelease=false" >> "$GITHUB_OUTPUT"
+            echo "v${version} will be published as the LATEST release."
+          elif printf '%s' "$suffix" | grep -Eq '^(dev|(alpha|a|beta|b|RC|rc)[0-9]*)$'; then
+            echo "prerelease=true" >> "$GITHUB_OUTPUT"
+            echo "v${version} will be published as a PRE-RELEASE (Composer stability: ${suffix})."
+          else
+            echo "::error::Version suffix '-${suffix}' is not one Composer treats as unstable. Use dev, alpha[N], a[N], beta[N], b[N], RC[N] or rc[N]."
+            exit 1
+          fi
+
       # Merges to main that are not a version bump (a docs fix, say) must not try to
       # re-release an existing version.
       - name: Skip if this version is already released
@@ -70,30 +96,51 @@ jobs:
 
       # gh release create tags --target itself, so the tag lands on the merge commit that
       # is on main. No tag is ever pushed for a change that was not accepted.
-      # Published as a PRE-RELEASE, deliberately. Merging to main cuts the release, but does
-      # not bless it: GitHub excludes prereleases from /releases/latest/, so the stable
-      # download URL keeps serving the last promoted release until a human is satisfied with
-      # this one and clears the "pre-release" flag on it (Releases -> Edit -> uncheck
-      # "Set as a pre-release", tick "Set as the latest release"). Until then, nobody
-      # downloading the latest URL gets an unvetted build.
-      - name: Publish the release (pre-release)
+      #
+      # --prerelease and --latest are both about GitHub only. Packagist ignores them
+      # entirely and reads the tag name, which is why the suffix has to be in the tag and
+      # not just in the flag. The two settings agree here because they come from the same
+      # place: the version in the plugin header.
+      - name: Publish the release
         if: steps.check.outputs.already == 'false'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VERSION: ${{ steps.version.outputs.version }}
+          IS_PRERELEASE: ${{ steps.kind.outputs.prerelease }}
         run: |
+          set -euo pipefail
+
+          install_note="Install the attached \`onik-lens.zip\` via wp-admin → Plugins → Add New → Upload Plugin.
+
+          Do not use the auto-generated \"Source code\" archives below: GitHub roots those at \`lens-wp-${VERSION}/\`, so they install under the wrong directory name. The attached zip unpacks to \`onik-lens/\`."
+
+          if [ "$IS_PRERELEASE" = "true" ]; then
+            flags=(--prerelease)
+            notes="ONIK Lens v${VERSION}
+
+          **Pre-release.** Nothing picks this up on its own:
+
+          * Composer reads the version suffix as unstable, so \`composer require onik/lens-wp\` on Packagist keeps resolving to the last stable release.
+          * GitHub excludes pre-releases from /releases/latest/, so the in-dashboard update checker does not offer it and the stable download URL still serves the previous release.
+
+          ${install_note}
+
+          The stable build of this version ships as its own tag once this one has been tested."
+          else
+            flags=(--latest)
+            notes="ONIK Lens v${VERSION}
+
+          This is the current release. It is what /releases/latest/download/onik-lens.zip serves, what the in-dashboard update checker offers to existing installs, and the newest stable version on Packagist.
+
+          ${install_note}
+
+          Always-current download:
+          https://github.com/${GITHUB_REPOSITORY}/releases/latest/download/onik-lens.zip"
+          fi
+
           gh release create "v${VERSION}" \
             --target "${GITHUB_SHA}" \
             --title "v${VERSION}" \
-            --prerelease \
-            --notes "ONIK Lens v${VERSION}
-
-          **Pre-release.** Not yet promoted, so the always-current download URL below still points at the previous release. Promote this one by editing the release: uncheck *Set as a pre-release*, tick *Set as the latest release*.
-
-          Install the attached \`onik-lens.zip\` via wp-admin → Plugins → Add New → Upload Plugin.
-
-          Always-current download (serves the latest **promoted** release):
-          https://github.com/${GITHUB_REPOSITORY}/releases/latest/download/onik-lens.zip
-
-          Do not use the auto-generated \"Source code\" archives below: GitHub roots those at \`lens-wp-${VERSION}/\`, so they install under the wrong directory name. The attached zip unpacks to \`onik-lens/\`." \
+            "${flags[@]}" \
+            --notes "$notes" \
             build/onik-lens.zip

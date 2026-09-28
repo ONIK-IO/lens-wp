@@ -23,6 +23,11 @@ class DivCollector
         applyConfigToDivDataSettings($divTag, $location, $config);
     }
 
+    public static function collectAttributeUrl($element, string $location, string $selector, array $config, string $originalHtml): array
+    {
+        return collectAttributeUrlModifications($element, $location, $selector, $config, $originalHtml);
+    }
+
     public static function findOriginalHtml($divTag, string $originalHtml): ?string
     {
         return findOriginalDivHtml($divTag, $originalHtml);

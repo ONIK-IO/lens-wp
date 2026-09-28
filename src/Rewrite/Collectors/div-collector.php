@@ -361,3 +361,89 @@ function applyConfigToDivDataSettings($divTag, $location, $config)
  * @param string $imgHtml The img tag HTML to update
  * @return string The updated img tag HTML
  */
+
+/**
+ * Locate the verbatim opening tag of $element in the original HTML.
+ *
+ * Matches on tag name plus the given attribute's exact value (and the class
+ * attribute when present) so that two elements sharing a class but holding
+ * different URLs cannot be confused. Returns the opening tag only — never the
+ * nested content — because a URL-bearing attribute lives on the tag itself
+ * and a parent (e.g. <a href> around <div data-thumbnail>) must not swallow
+ * its children's bytes.
+ */
+function findOriginalOpeningTag($element, $attributeName, $originalHtml)
+{
+    $tagName = strtolower($element->tagName);
+    $attrValue = $element->getAttribute($attributeName);
+
+    $pattern = '/<' . preg_quote($tagName, '/') . '\b';
+    $pattern .= '(?=[^>]*\b' . preg_quote($attributeName, '/') . '\s*=\s*(["\'])' . preg_quote($attrValue, '/') . '\1)';
+
+    $class = $element->getAttribute('class');
+    if ($class !== '') {
+        $pattern .= '(?=[^>]*\bclass\s*=\s*(["\'])' . preg_quote($class, '/') . '\2)';
+    }
+
+    $pattern .= '[^>]*>/i';
+
+    if (preg_match($pattern, $originalHtml, $matches)) {
+        return $matches[0];
+    }
+
+    return false;
+}
+
+/**
+ * srcSwap "AttributeUrl": rewrite an image URL held in an arbitrary attribute
+ * named by $config['attribute'] (e.g. Elementor Gallery's data-thumbnail, a
+ * lightbox <a href>, a lazy-loader's data-bg). Works for any element type.
+ */
+function collectAttributeUrlModifications($element, $location, $selector, $config, $originalHtml)
+{
+    if (!isset($config['attribute']) || !is_string($config['attribute']) || trim($config['attribute']) === '') {
+        return [];
+    }
+    $attributeName = trim($config['attribute']);
+
+    if (!$element->hasAttribute($attributeName)) {
+        return [];
+    }
+
+    $originalUrl = $element->getAttribute($attributeName);
+    if ($originalUrl === '' || !should_alter_image_based_on_src($originalUrl)) {
+        return [];
+    }
+
+    $format = isset($config['format']) ? $config['format'] : 'auto';
+    $quality = isset($config['quality']) ? $config['quality'] : 80;
+
+    $newImageLocation = $location . rawurlencode($originalUrl) . '?quality=' . $quality . '&format=' . $format;
+    if (isset($config['widths']) && is_array($config['widths']) && count($config['widths']) > 0) {
+        $newImageLocation .= '&width=' . (int) $config['widths'][0];
+    }
+
+    $openingTag = findOriginalOpeningTag($element, $attributeName, $originalHtml);
+    if ($openingTag === false) {
+        return [];
+    }
+
+    // Swap the whole attr="value" token so an identical URL elsewhere on the
+    // tag (another attribute, or a substring of one) is left alone.
+    $tokenPattern = '/\b' . preg_quote($attributeName, '/') . '\s*=\s*(["\'])' . preg_quote($originalUrl, '/') . '\1/i';
+    $newOpeningTag = preg_replace_callback($tokenPattern, function ($m) use ($attributeName, $newImageLocation) {
+        return $attributeName . '=' . $m[1] . $newImageLocation . $m[1];
+    }, $openingTag, 1);
+
+    if ($newOpeningTag === null || $newOpeningTag === $openingTag) {
+        return [];
+    }
+
+    return [[
+        'search' => $openingTag,
+        'replace' => $newOpeningTag,
+        'selector' => $selector,
+        'src' => $originalUrl,
+        'pattern' => null
+    ]];
+}

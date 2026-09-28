@@ -14,6 +14,8 @@ Slow images are the primary reason WordPress sites fail Core Web Vitals like Lar
 - **Lightweight & fast** — no image processing on your server, no bloated libraries, no background jobs. All the heavy lifting is offloaded to the edge so your server stays fast and lean.
 - **Non-destructive** — your WordPress Media Library is never modified; uninstall by simply deactivating the plugin
 - **Works everywhere** — optimizes images in media, theme assets, Sliders, page builders (Elementor, Divi, Beaver Builder, and more), and any HTML on the page
+- **Background images in stylesheets** — Scan a theme or page-builder CSS file, pick which backgrounds are worth optimizing, and Lens serves them from the CDN. Your stylesheets are never modified.
+- **Galleries that render no `<img>`** — Elementor's Gallery widget and similar builders hand the image URL to JavaScript in an attribute such as `data-thumbnail`. Point a selector at that attribute (`srcSwap: "AttributeUrl"`) and Lens rewrites it, lightbox links included.
 - **Full Control of Lazy Load & Sizing** — Configure lazy loading per CSS selector, control how many images load eagerly above the fold, and fine-tune responsive `srcset` breakpoints to match your design — all from the settings panel.
 - **YouTube Facade** — Replaces YouTube embeds with a lightweight screenshot placeholder. The player only loads on click, eliminating the ~500 KB embed penalty on first load — and passing Google Lighthouse's "Facade your YouTube embeds" recommendation.
 - **Site Preloads for LCP** — Inject `<link rel="preload">` hints for your most critical above-the-fold assets to directly improve your Largest Contentful Paint (LCP) score.

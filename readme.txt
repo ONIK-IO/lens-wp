@@ -4,7 +4,7 @@ Tags: images, cdn, webp, avif, youtube, performance, lazy-load, core-web-vitals
 Requires at least: 6.0
 Tested up to: 6.4
 Requires PHP: 8.1
-Stable tag: 0.18.260820
+Stable tag: 0.19.260928-dev
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -23,6 +23,7 @@ Slow images are the primary reason WordPress sites fail Core Web Vitals like Lar
 * **Lightweight and fast** — no image processing on your server, no bloated libraries, no background jobs.
 * **Non-destructive** — your WordPress Media Library is never modified; uninstall by simply deactivating the plugin.
 * **Works everywhere** — optimizes images in media, theme assets, sliders, page builders (Elementor, Divi, Beaver Builder, and more), and any HTML on the page.
+* **Background images in stylesheets** — scan a theme or page-builder CSS file, pick which backgrounds are worth optimizing, and Lens serves them from the CDN. Your stylesheets are never modified.
 * **Full control of lazy load and sizing** — configure lazy loading per CSS selector, control how many images load eagerly above the fold, and fine-tune responsive srcset breakpoints — all from the settings panel.
 * **YouTube facade** — replaces YouTube embeds with a lightweight screenshot placeholder. The player only loads on click, eliminating the ~500 KB embed penalty on first load.
 * **Site preloads for LCP** — inject `<link rel="preload">` hints for your most critical above-the-fold assets to directly improve LCP.
@@ -97,7 +98,7 @@ No data is collected by the plugin from visitors. Once activated, visitor browse
 
 == Changelog ==
 
-= 0.18.260820 =
+= 0.19.260928-dev =
 * Initial WordPress.org release.
 * Refactored into namespaced modules.
 * Tightened settings sanitization (tab whitelist, URL scheme check, text-field sanitizers).
@@ -105,5 +106,5 @@ No data is collected by the plugin from visitors. Once activated, visitor browse
 
 == Upgrade Notice ==
 
-= 0.18.260820 =
+= 0.19.260928-dev =
 First public release.

@@ -56,6 +56,7 @@ class ImageSettingsRenderer
                         <th style="width: 7%;">Decoding</th>
                         <th style="width: 7%;">Format</th>
                         <th style="width: 8%;">SrcSwap</th>
+                        <th style="width: 7%;">Attribute</th>
                         <th style="width: 6%;">Set Width</th>
                         <th style="width: 6%;">Set Height</th>
                         <th style="width: 6%;">Lazy Load After</th>
@@ -66,7 +67,7 @@ class ImageSettingsRenderer
                 <tbody id="onik_images_image_settings_tbody">
                     <?php if (empty($tableData)): ?>
                         <tr class="no-items">
-                            <td colspan="12">No settings found.</td>
+                            <td colspan="13">No settings found.</td>
                         </tr>
                     <?php else: ?>
                         <?php foreach ($tableData as $index => $row): ?>
@@ -115,6 +116,11 @@ class ImageSettingsRenderer
                                     <span class="display-value"><?php echo esc_html($row['srcSwap']); ?></span>
                                     <input type="hidden" name="onik_images_image_settings[<?php echo $index; ?>][srcSwap]"
                                         value="<?php echo esc_attr($row['srcSwap']); ?>" />
+                                </td>
+                                <td class="col-attribute">
+                                    <span class="display-value"><?php echo esc_html($row['attribute'] ?? ''); ?></span>
+                                    <input type="hidden" name="onik_images_image_settings[<?php echo $index; ?>][attribute]"
+                                        value="<?php echo esc_attr($row['attribute'] ?? ''); ?>" />
                                 </td>
                                 <td class="col-setWidth">
                                     <span class="display-value"><?php echo esc_html($row['setWidth']); ?></span>
@@ -248,11 +254,21 @@ class ImageSettingsRenderer
                                     <option value="srcAndSrcSet">srcAndSrcSet</option>
                                     <option value="InlineStyleUrl">InlineStyleUrl</option>
                                     <option value="ExternalCssUrl">ExternalCssUrl</option>
+                                    <option value="AttributeUrl">AttributeUrl</option>
                                 </select>
                                 <p class="description">Controls which image attributes to swap (default: "srcSet").
                                     Use "InlineStyleUrl" for background-image URLs in inline &lt;style&gt; blocks, and
                                     "ExternalCssUrl" for background-image URLs in enqueued stylesheet files. The CSS
-                                    Backgrounds tab finds candidates for the latter.</p>
+                                    Backgrounds tab finds candidates for the latter. Use "AttributeUrl" when the URL
+                                    sits in some other attribute and name it below — e.g. Elementor Gallery tiles
+                                    (<code>.e-gallery-image</code> + <code>data-thumbnail</code>).</p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th><label for="onik-modal-attribute">Attribute</label></th>
+                            <td>
+                                <input type="text" id="onik-modal-attribute" class="regular-text" style="width:100%;" placeholder="data-thumbnail">
+                                <p class="description">Attribute holding the image URL. Only used with SrcSwap "AttributeUrl".</p>
                             </td>
                         </tr>
                         <tr>
@@ -357,6 +373,7 @@ class ImageSettingsRenderer
                         $('#onik-modal-decoding').val(row.find('.col-decoding input').val());
                         $('#onik-modal-format').val(row.find('.col-format input').val());
                         $('#onik-modal-srcSwap').val(row.find('.col-srcSwap input').val());
+                        $('#onik-modal-attribute').val(row.find('.col-attribute input').val());
                         $('#onik-modal-setWidth').val(row.find('.col-setWidth input').val());
                         $('#onik-modal-setHeight').val(row.find('.col-setHeight input').val());
                         $('#onik-modal-lazyLoadAfter').val(row.find('.col-lazyLoadAfter input').val());
@@ -408,6 +425,7 @@ class ImageSettingsRenderer
                         decoding: $('#onik-modal-decoding').val(),
                         format: $('#onik-modal-format').val(),
                         srcSwap: $('#onik-modal-srcSwap').val(),
+                        attribute: $('#onik-modal-attribute').val(),
                         setWidth: $('#onik-modal-setWidth').val(),
                         setHeight: $('#onik-modal-setHeight').val(),
                         lazyLoadAfter: $('#onik-modal-lazyLoadAfter').val()
@@ -441,7 +459,7 @@ class ImageSettingsRenderer
                 $table.on('click', '.delete-row', function () {
                     $(this).closest('tr').remove();
                     if ($table.find('tr').length === 0) {
-                        $table.append('<tr class="no-items"><td colspan="12">No settings found.</td></tr>');
+                        $table.append('<tr class="no-items"><td colspan="13">No settings found.</td></tr>');
                     } else {
                         updateRowIndices();
                     }
@@ -502,6 +520,7 @@ class ImageSettingsRenderer
                                 decoding: '',
                                 format: '',
                                 srcSwap: '',
+                                attribute: '',
                                 setWidth: '',
                                 setHeight: '',
                                 lazyLoadAfter: ''
@@ -512,7 +531,7 @@ class ImageSettingsRenderer
                                 rowData.widths = config.widths.join(', ');
                             }
     
-                            var fields = ['quality', 'loading', 'sizes', 'fetchpriority', 'decoding', 'format', 'srcSwap', 'setWidth', 'setHeight', 'lazyLoadAfter'];
+                            var fields = ['quality', 'loading', 'sizes', 'fetchpriority', 'decoding', 'format', 'srcSwap', 'attribute', 'setWidth', 'setHeight', 'lazyLoadAfter'];
                             fields.forEach(function (field) {
                                 if (config[field] !== undefined && config[field] !== null) {
                                     rowData[field] = config[field];
@@ -524,7 +543,7 @@ class ImageSettingsRenderer
                         });
     
                         if (index === 0) {
-                            $table.append('<tr class="no-items"><td colspan="12">No settings found.</td></tr>');
+                            $table.append('<tr class="no-items"><td colspan="13">No settings found.</td></tr>');
                         }
     
                         // Clear the textarea
@@ -564,7 +583,7 @@ class ImageSettingsRenderer
                         }
     
                         // Other fields
-                        var fields = ['quality', 'loading', 'sizes', 'fetchpriority', 'decoding', 'format', 'srcSwap', 'setWidth', 'setHeight', 'lazyLoadAfter'];
+                        var fields = ['quality', 'loading', 'sizes', 'fetchpriority', 'decoding', 'format', 'srcSwap', 'attribute', 'setWidth', 'setHeight', 'lazyLoadAfter'];
                         fields.forEach(function (field) {
                             var $input = $row.find('[name*="[' + field + ']"]');
                             var val = $input.val();
