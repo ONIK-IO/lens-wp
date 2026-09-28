@@ -401,7 +401,15 @@ function alter_html_hybrid($html, $current_path_override = null)
                         continue;
                     }
 
-                    if ($element->tagName == 'img') {
+                    if (($config['srcSwap'] ?? '') === 'AttributeUrl') {
+                        // The URL lives in a named attribute, so the element type is
+                        // irrelevant: <div data-thumbnail>, <a href>, <span data-bg>...
+                        $modifications = array_merge(
+                            $modifications,
+                            collectAttributeUrlModifications($element, $appendLocation, $selector, $config, $html)
+                        );
+                        $processedElements->attach($element);
+                    } else if ($element->tagName == 'img') {
 
                         $newModifications = collectImgModifications($element, $appendLocation, $selector, $config, $processedImageCounts[$selector], $html);
                         //dedupe the new modifications

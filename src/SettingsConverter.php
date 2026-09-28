@@ -35,6 +35,7 @@ class SettingsConverter
                 'decoding' => isset($settings['decoding']) ? (string)$settings['decoding'] : '',
                 'format' => isset($settings['format']) ? (string)$settings['format'] : '',
                 'srcSwap' => isset($settings['srcSwap']) ? (string)$settings['srcSwap'] : '',
+                'attribute' => isset($settings['attribute']) ? (string)$settings['attribute'] : '',
                 'setWidth' => isset($settings['setWidth']) ? (string)$settings['setWidth'] : '',
                 'setHeight' => isset($settings['setHeight']) ? (string)$settings['setHeight'] : '',
                 'lazyLoadAfter' => isset($settings['lazyLoadAfter']) ? (string)$settings['lazyLoadAfter'] : '',
@@ -75,7 +76,7 @@ class SettingsConverter
             }
 
             // Handle other fields
-            $fields = ['quality', 'loading', 'sizes', 'fetchpriority', 'decoding', 'format', 'srcSwap', 'setWidth', 'setHeight', 'lazyLoadAfter'];
+            $fields = ['quality', 'loading', 'sizes', 'fetchpriority', 'decoding', 'format', 'srcSwap', 'attribute', 'setWidth', 'setHeight', 'lazyLoadAfter'];
             foreach ($fields as $field) {
                 if (isset($row[$field]) && $row[$field] !== '') {
                     $value = $row[$field];

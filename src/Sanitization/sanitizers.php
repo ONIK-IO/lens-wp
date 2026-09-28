@@ -229,10 +229,21 @@ function onik_images_validate_image_settings($json_string)
 
         // Validate srcSwap if present
         if (isset($config['srcSwap'])) {
-            $valid_srcswap_values = ['srcSet', 'src', 'srcAndSrcSet', 'InlineStyleUrl', 'ExternalCssUrl'];
+            $valid_srcswap_values = ['srcSet', 'src', 'srcAndSrcSet', 'InlineStyleUrl', 'ExternalCssUrl', 'AttributeUrl'];
             if (!in_array($config['srcSwap'], $valid_srcswap_values)) {
                 $errors[] = "Selector '$selector' srcSwap must be one of: " . implode(', ', $valid_srcswap_values);
             }
+        }
+
+        // Validate attribute if present; required by srcSwap AttributeUrl
+        if (isset($config['attribute'])) {
+            if (!is_string($config['attribute']) || !preg_match('/^[A-Za-z_:][A-Za-z0-9_:.-]*$/', $config['attribute'])) {
+                $errors[] = "Selector '$selector' attribute must be a valid HTML attribute name (e.g. data-thumbnail)";
+            }
+        }
+        if (isset($config['srcSwap']) && $config['srcSwap'] === 'AttributeUrl'
+            && (!isset($config['attribute']) || !is_string($config['attribute']) || trim($config['attribute']) === '')) {
+            $errors[] = "Selector '$selector' srcSwap AttributeUrl requires an attribute name";
         }
 
         // Validate setWidth if present
@@ -250,7 +261,7 @@ function onik_images_validate_image_settings($json_string)
         }
 
         // Check for unknown properties
-        $allowed_properties = ['widths', 'quality', 'loading', 'sizes', 'lazyLoadAfter', 'fetchpriority', 'decoding', 'format', 'srcSwap', 'setWidth', 'setHeight', 'picture'];
+        $allowed_properties = ['widths', 'quality', 'loading', 'sizes', 'lazyLoadAfter', 'fetchpriority', 'decoding', 'format', 'srcSwap', 'attribute', 'setWidth', 'setHeight', 'picture'];
         foreach ($config as $property => $value) {
             if (!in_array($property, $allowed_properties)) {
                 $errors[] = "Selector '$selector' contains unknown property: '$property'";

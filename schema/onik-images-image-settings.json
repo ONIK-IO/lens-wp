@@ -60,9 +60,14 @@
       },
       "srcSwap": {
         "type": "string",
-        "enum": ["srcSet", "src", "srcAndSrcSet", "InlineStyleUrl", "ExternalCssUrl"],
+        "enum": ["srcSet", "src", "srcAndSrcSet", "InlineStyleUrl", "ExternalCssUrl", "AttributeUrl"],
         "default": "srcSet",
-        "description": "Controls which image attributes to swap. 'srcSet' for responsive images with srcset attribute, 'src' for single image with src attribute, 'srcAndSrcSet' for both attributes, 'InlineStyleUrl' for background-image URLs in inline <style> blocks, 'ExternalCssUrl' for background-image URLs in enqueued stylesheet files"
+        "description": "Controls which image attributes to swap. 'srcSet' for responsive images with srcset attribute, 'src' for single image with src attribute, 'srcAndSrcSet' for both attributes, 'InlineStyleUrl' for background-image URLs in inline <style> blocks, 'ExternalCssUrl' for background-image URLs in enqueued stylesheet files, 'AttributeUrl' for an image URL held in the attribute named by 'attribute' (any element type)"
+      },
+      "attribute": {
+        "type": "string",
+        "pattern": "^[A-Za-z_:][A-Za-z0-9_:.-]*$",
+        "description": "Attribute holding the image URL when srcSwap is 'AttributeUrl' — e.g. 'data-thumbnail' for an Elementor Gallery tile, or 'href' on its lightbox link. Required in that mode, ignored otherwise."
       },
       "setWidth": {
         "type": ["integer", "null"],

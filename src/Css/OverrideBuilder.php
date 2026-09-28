@@ -16,12 +16,31 @@ namespace OnikImages\Css;
 class OverrideBuilder
 {
     /**
-     * Stylesheets examined per request. A page linking more than this is
-     * unusual; the cap stops a pathological page from doing unbounded file IO
-     * on a cold cache. When it bites, the debug comment says so rather than
-     * silently reporting full coverage.
+     * Local stylesheets read per request. The cap stops a pathological page
+     * from doing unbounded file IO on a cold cache.
+     *
+     * It counts sheets actually read, not <link> tags seen. Those are very
+     * different numbers: a real WordPress page links Google Fonts, CDN assets
+     * and other off-host sheets that StylesheetReader rejects without touching
+     * the disk, and burning cap slots on them truncated the list long before
+     * the IO budget was anywhere near spent.
+     *
+     * The old limit was 40 <link> tags, which sounded generous and was not.
+     * frankhorvat.com links 89 stylesheets (SureCart alone contributes ~40),
+     * with Astra Addon's dynamic CSS — the file holding the page header's
+     * background-image — sitting at position 87. It was sliced off before
+     * anything read it, so a correctly configured .ast-title-bar-wrap selector
+     * produced no override and the header image was served unconverted, with
+     * nothing but the debug comment to say why.
      */
-    private const MAX_STYLESHEETS = 40;
+    private const MAX_STYLESHEETS = 200;
+
+    /**
+     * Total CSS scanned per request. Sheet count is a poor proxy for the cost
+     * this is meant to bound; bytes are the cost. Per-sheet size is already
+     * capped by StylesheetReader::MAX_BYTES.
+     */
+    private const MAX_SCAN_BYTES = 8388608;
 
     private const STYLE_ID = 'onik-lens-css';
 
@@ -49,21 +68,22 @@ class OverrideBuilder
             return '';
         }
 
-        $hrefs = self::stylesheetHrefs($dom);
-        if (count($hrefs) > self::MAX_STYLESHEETS) {
-            $stats['capped'] = true;
-            $stats['skipped'] = count($hrefs) - self::MAX_STYLESHEETS;
-            $hrefs = array_slice($hrefs, 0, self::MAX_STYLESHEETS);
-        }
-
         $rules = [];
+        $scanned = 0;
 
-        foreach ($hrefs as $href) {
+        foreach (self::stylesheetHrefs($dom) as $href) {
+            if ($stats['stylesheets'] >= self::MAX_STYLESHEETS || $scanned >= self::MAX_SCAN_BYTES) {
+                $stats['capped'] = true;
+                $stats['skipped']++;
+                continue;
+            }
+
             $sheet = StylesheetReader::read($href);
             if (!$sheet['ok']) {
                 continue;
             }
             $stats['stylesheets']++;
+            $scanned += $sheet['bytes'];
 
             foreach ($sheet['records'] as $record) {
                 foreach (self::matchingSelectors($record, $targets) as $selector) {
